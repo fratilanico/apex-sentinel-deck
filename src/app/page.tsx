@@ -547,7 +547,7 @@ function SlideStack() {
         <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
           Field hardware &mdash; radar, cameras, RF analysis, physical intercept.
           The complete chain from first detection to response. Open source software.
-          Tested hardware. One integrated system for Defending Airspace.
+          Field hardware. One integrated system for Defending Airspace.
         </p>
       </motion.div>
     </div>
