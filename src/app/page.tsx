@@ -266,13 +266,13 @@ function GlobeBackground({ onGlobeReady }: { onGlobeReady?: (globe: any) => void
         .pathDashLength(999)
         .pathDashGap(0);
 
-      // Camera: focus on Romania / Eastern Europe
-      globe.pointOfView({ lat: 46, lng: 25, altitude: 1.8 }, 0);
+      // Camera: zoomed in tight on Romania — see the action
+      globe.pointOfView({ lat: 45.5, lng: 25, altitude: 0.55 }, 0);
 
       // Controls
       const controls = globe.controls();
       controls.autoRotate = true;
-      controls.autoRotateSpeed = 0.15;
+      controls.autoRotateSpeed = 0.08;
       controls.enableZoom = false;
       controls.enablePan = false;
       controls.enableDamping = true;
