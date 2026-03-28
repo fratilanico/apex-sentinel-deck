@@ -1,958 +1,1048 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CountUp } from "@/components/CountUp";
 
 /* ═══════════════════════════════════════════════════════════
-   SLIDE REGISTRY
+   DATA — Sensor nodes, arcs, slides
    ═══════════════════════════════════════════════════════════ */
+
+const SENSOR_NODES = [
+  { id: "SN-BUC", city: "BUCHAREST", lat: 44.4326, lng: 26.1038, tier: 1, isHQ: true },
+  { id: "SN-TIM", city: "TIMIȘOARA", lat: 45.7489, lng: 21.2087, tier: 1, isHQ: false },
+  { id: "SN-CLJ", city: "CLUJ-NAPOCA", lat: 46.7712, lng: 23.6236, tier: 1, isHQ: false },
+  { id: "SN-CTA", city: "CONSTANȚA", lat: 44.1765, lng: 28.6348, tier: 1, isHQ: false },
+  { id: "SN-IAS", city: "IAȘI", lat: 47.1585, lng: 27.6014, tier: 1, isHQ: false },
+  { id: "SN-BRA", city: "BRAȘOV", lat: 45.6553, lng: 25.6108, tier: 2, isHQ: false },
+  { id: "SN-SBU", city: "SIBIU", lat: 45.7983, lng: 24.1256, tier: 2, isHQ: false },
+  { id: "SN-CRA", city: "CRAIOVA", lat: 44.3302, lng: 23.7949, tier: 2, isHQ: false },
+  { id: "SN-SUC", city: "SUCEAVA", lat: 47.6635, lng: 26.2596, tier: 2, isHQ: false },
+  { id: "SN-GAL", city: "GALAȚI", lat: 45.4353, lng: 28.008, tier: 2, isHQ: false },
+  { id: "SN-TUL", city: "TULCEA", lat: 45.1787, lng: 28.8012, tier: 3, isHQ: false },
+  { id: "SN-BOT", city: "BOTOȘANI", lat: 47.7487, lng: 26.6616, tier: 3, isHQ: false },
+  { id: "SN-BAC", city: "BACĂU", lat: 46.567, lng: 26.9146, tier: 3, isHQ: false },
+  { id: "SN-DEV", city: "DEVA", lat: 45.8833, lng: 22.9, tier: 3, isHQ: false },
+  { id: "SN-ALB", city: "ALBA IULIA", lat: 46.0667, lng: 23.5833, tier: 3, isHQ: false },
+];
+
+const THREAT_ARCS = [
+  { startLat: 48.5, startLng: 35.0, endLat: 47.15, endLng: 27.6, label: "VECTOR NORTH" },
+  { startLat: 46.0, startLng: 36.0, endLat: 44.43, endLng: 26.1, label: "VECTOR CENTRAL" },
+  { startLat: 44.0, startLng: 33.5, endLat: 44.17, endLng: 28.63, label: "VECTOR BLACK SEA" },
+  { startLat: 47.0, startLng: 38.0, endLat: 46.77, endLng: 23.62, label: "VECTOR DEEP" },
+];
+
+const HQ = SENSOR_NODES[0];
+const DEFENSE_ARCS = [
+  // Hub connections from Bucharest
+  ...["SN-TIM", "SN-CLJ", "SN-CTA", "SN-IAS", "SN-BRA"].map((id) => {
+    const node = SENSOR_NODES.find((n) => n.id === id)!;
+    return { startLat: HQ.lat, startLng: HQ.lng, endLat: node.lat, endLng: node.lng };
+  }),
+  // Regional mesh
+  { startLat: 45.7489, startLng: 21.2087, endLat: 45.7983, endLng: 24.1256 },
+  { startLat: 46.7712, startLng: 23.6236, endLat: 47.1585, endLng: 27.6014 },
+  { startLat: 44.1765, startLng: 28.6348, endLat: 45.4353, endLng: 28.008 },
+  { startLat: 47.1585, startLng: 27.6014, endLat: 47.6635, endLng: 26.2596 },
+  { startLat: 45.6553, startLng: 25.6108, endLat: 45.7983, endLng: 24.1256 },
+];
+
 const SLIDES = [
   { id: "title", label: "SENTINEL" },
-  { id: "problem", label: "Problem" },
-  { id: "insight", label: "Insight" },
-  { id: "pipeline", label: "Pipeline" },
-  { id: "rf", label: "RF" },
+  { id: "problem", label: "PROBLEM" },
+  { id: "insight", label: "INSIGHT" },
+  { id: "pipeline", label: "PIPELINE" },
+  { id: "rf", label: "RF SPECTRUM" },
   { id: "elrs", label: "ELRS" },
-  { id: "4d", label: "4D Node" },
-  { id: "depth", label: "Depth" },
-  { id: "oss", label: "Open Source" },
-  { id: "roadmap", label: "Roadmap" },
+  { id: "4d-model", label: "4D MODEL" },
+  { id: "engineering", label: "ENGINEERING" },
+  { id: "open-source", label: "OPEN SOURCE" },
+  { id: "roadmap", label: "ROADMAP" },
 ] as const;
 
 type SlideId = (typeof SLIDES)[number]["id"];
 
 /* ═══════════════════════════════════════════════════════════
-   ANIMATION VARIANTS — stable refs, outside components
+   ANIMATION VARIANTS
    ═══════════════════════════════════════════════════════════ */
+
 const slideVariants = {
-  enter: { opacity: 0 },
-  center: { opacity: 1 },
-  exit: { opacity: 0 },
+  enter: { opacity: 0, y: 8 },
+  center: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
 };
 
 const fade = {
   hidden: { opacity: 0 },
   visible: (i: number) => ({
     opacity: 1,
-    transition: { delay: i * 0.04, duration: 0.3, ease: "easeOut" as const },
+    transition: { delay: i * 0.08, duration: 0.4, ease: "easeOut" as const },
   }),
 };
 
 /* ═══════════════════════════════════════════════════════════
-   SHARED COMPONENTS
+   UTC CLOCK
    ═══════════════════════════════════════════════════════════ */
-function SlideBg({
-  src,
-  overlay = "rgba(10,10,15,0.55)",
-}: {
-  src: string;
-  overlay?: string;
-}) {
+
+function useUTCClock() {
+  const [time, setTime] = useState("");
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setTime(
+        d.getUTCHours().toString().padStart(2, "0") +
+          ":" +
+          d.getUTCMinutes().toString().padStart(2, "0") +
+          ":" +
+          d.getUTCSeconds().toString().padStart(2, "0") +
+          " UTC"
+      );
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, []);
+  return time;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GLOBE BACKGROUND (dynamic import — no SSR)
+   ═══════════════════════════════════════════════════════════ */
+
+function GlobeBackground() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const globeRef = useRef<ReturnType<typeof Object> | null>(null);
+
+  useEffect(() => {
+    if (!containerRef.current || globeRef.current) return;
+
+    let mounted = true;
+
+    (async () => {
+      const GlobeGL = (await import("globe.gl")).default;
+      const THREE = await import("three");
+      const topoClient = await import("topojson-client");
+
+      if (!mounted || !containerRef.current) return;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const globe = (GlobeGL as any)()(containerRef.current)
+        .globeImageUrl("")
+        .backgroundImageUrl("")
+        .showAtmosphere(true)
+        .atmosphereColor("#00d4ff")
+        .atmosphereAltitude(0.2)
+        .width(window.innerWidth)
+        .height(window.innerHeight);
+
+      globeRef.current = globe;
+
+      // Dark globe material
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const material = globe.globeMaterial() as any;
+      material.color = new THREE.Color(0x0a1525);
+      material.emissive = new THREE.Color(0x001122);
+      material.emissiveIntensity = 0.8;
+      material.map = null;
+      material.bumpMap = null;
+      material.needsUpdate = true;
+
+      // Lighting
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const scene = globe.scene() as any;
+      scene.background = new THREE.Color(0x000000);
+      scene.add(new THREE.AmbientLight(0x00d4ff, 0.5));
+      const dirLight = new THREE.DirectionalLight(0x00d4ff, 0.8);
+      dirLight.position.set(-3, 2, 4);
+      scene.add(dirLight);
+
+      // Country polygons
+      try {
+        const res = await fetch("/countries-110m.json");
+        const topo = await res.json();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const countries = (topoClient.feature as any)(topo, topo.objects.countries).features;
+
+        globe
+          .polygonsData(countries)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .polygonGeoJsonGeometry((d: any) => d.geometry)
+          .polygonCapColor(() => "rgba(0,212,255,0.04)")
+          .polygonSideColor(() => "rgba(0,212,255,0.02)")
+          .polygonStrokeColor(() => "rgba(0,212,255,0.25)")
+          .polygonAltitude(0.005)
+          .polygonsTransitionDuration(0);
+      } catch (e) {
+        console.warn("Failed to load countries", e);
+      }
+
+      // Sensor node points
+      globe
+        .pointsData(SENSOR_NODES)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pointLat((d: any) => d.lat)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pointLng((d: any) => d.lng)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pointColor((d: any) =>
+          d.isHQ ? "#00d4ff" : d.tier === 1 ? "#00d4ff" : d.tier === 2 ? "#0088aa" : "#005566"
+        )
+        .pointAltitude(0.02)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pointRadius((d: any) => (d.isHQ ? 0.6 : d.tier === 1 ? 0.4 : 0.25))
+        .pointResolution(16);
+
+      // Pulse rings
+      globe
+        .ringsData(SENSOR_NODES)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .ringLat((d: any) => d.lat)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .ringLng((d: any) => d.lng)
+        .ringColor(() => (t: number) => `rgba(0,212,255,${(1 - t) * 0.6})`)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .ringMaxRadius((d: any) => (d.isHQ ? 4 : d.tier === 1 ? 2.5 : 1.5))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .ringPropagationSpeed((d: any) => (d.isHQ ? 2.5 : 1.5))
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .ringRepeatPeriod((d: any) => (d.isHQ ? 1000 : 2000));
+
+      // Arcs: threats in red, defense in cyan
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const allArcs: any[] = [
+        ...THREAT_ARCS.map((a) => ({
+          ...a,
+          color: ["rgba(255,68,68,0.05)", "rgba(255,68,68,0.6)", "rgba(255,68,68,0.05)"],
+        })),
+        ...DEFENSE_ARCS.map((a) => ({
+          ...a,
+          color: ["rgba(0,212,255,0.05)", "rgba(0,212,255,0.4)", "rgba(0,212,255,0.05)"],
+        })),
+      ];
+
+      globe
+        .arcsData(allArcs)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .arcStartLat((d: any) => d.startLat)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .arcStartLng((d: any) => d.startLng)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .arcEndLat((d: any) => d.endLat)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .arcEndLng((d: any) => d.endLng)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .arcColor((d: any) => d.color)
+        .arcAltitudeAutoScale(0.3)
+        .arcStroke(0.5)
+        .arcDashLength(0.6)
+        .arcDashGap(2)
+        .arcDashAnimateTime(2500);
+
+      // Grid lines
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const gridPaths: any[] = [];
+      for (let lat = -60; lat <= 60; lat += 30) {
+        const pts = [];
+        for (let i = 0; i <= 72; i++) pts.push({ lat, lng: -180 + (360 / 72) * i });
+        gridPaths.push({ coords: pts });
+      }
+      for (let lng = -180; lng <= 150; lng += 30) {
+        const pts = [];
+        for (let i = 0; i <= 72; i++) pts.push({ lat: -90 + (180 / 72) * i, lng });
+        gridPaths.push({ coords: pts });
+      }
+
+      globe
+        .pathsData(gridPaths)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pathPoints((d: any) => d.coords)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pathPointLat((p: any) => p.lat)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .pathPointLng((p: any) => p.lng)
+        .pathColor(() => "rgba(0,212,255,0.06)")
+        .pathStroke(0.3)
+        .pathDashLength(999)
+        .pathDashGap(0);
+
+      // Camera: focus on Romania / Eastern Europe
+      globe.pointOfView({ lat: 46, lng: 25, altitude: 1.8 }, 0);
+
+      // Controls
+      const controls = globe.controls();
+      controls.autoRotate = true;
+      controls.autoRotateSpeed = 0.15;
+      controls.enableZoom = false;
+      controls.enablePan = false;
+      controls.enableDamping = true;
+
+      // Star field
+      const starGeo = new THREE.BufferGeometry();
+      const starPos = new Float32Array(3000 * 3);
+      for (let i = 0; i < 3000; i++) {
+        const r = 40 + Math.random() * 60;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        starPos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        starPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        starPos[i * 3 + 2] = r * Math.cos(phi);
+      }
+      starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+      const stars = new THREE.Points(
+        starGeo,
+        new THREE.PointsMaterial({
+          size: 0.1,
+          color: 0x00d4ff,
+          transparent: true,
+          opacity: 0.6,
+        })
+      );
+      scene.add(stars);
+
+      // Resize
+      const onResize = () => {
+        globe.width(window.innerWidth).height(window.innerHeight);
+      };
+      window.addEventListener("resize", onResize);
+
+      return () => {
+        window.removeEventListener("resize", onResize);
+      };
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  return <div ref={containerRef} id="globe-container" />;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HUD COMPONENTS
+   ═══════════════════════════════════════════════════════════ */
+
+function HudTopBar() {
+  const utc = useUTCClock();
   return (
-    <div className="absolute inset-0 z-0">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{ backgroundImage: `url(${src})` }}
-      />
-      <div className="absolute inset-0" style={{ background: overlay }} />
+    <div className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4 pointer-events-none">
+      {/* Left: system label */}
+      <div className="flex items-center gap-4">
+        <div>
+          <div className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff] uppercase font-bold">
+            APEX-SENTINEL
+          </div>
+          <div className="font-mono text-[9px] tracking-[0.15em] text-[#3a5a6a] uppercase">
+            Counter-UAS Network
+          </div>
+        </div>
+        <div className="flex items-center gap-2 ml-2">
+          <span className="status-dot" />
+          <span className="font-mono text-[9px] tracking-wider text-[#0088aa] uppercase">
+            ACTIVE
+          </span>
+        </div>
+      </div>
+
+      {/* Right: coords + UTC clock */}
+      <div className="text-right">
+        <div className="font-mono text-[10px] text-[#3a5a6a] tracking-wider">
+          45.9432&deg;N &nbsp; 24.9668&deg;E
+        </div>
+        <div className="font-mono text-[11px] text-[#00d4ff] tracking-[0.15em] tabular-nums">
+          {utc}
+        </div>
+      </div>
     </div>
   );
 }
 
-function Card({
-  children,
-  className = "",
-  borderColor = "rgba(255,255,255,0.08)",
-}: {
-  children: React.ReactNode;
-  className?: string;
-  borderColor?: string;
-}) {
+function ClassificationBar() {
   return (
-    <div
-      className={`bg-[rgba(10,12,18,0.65)] backdrop-blur-sm rounded-lg p-5 ${className}`}
-      style={{ border: `1px solid ${borderColor}` }}
-    >
-      {children}
+    <div className="fixed bottom-0 left-0 right-0 z-20 pointer-events-none">
+      <div className="w-full h-[1px] bg-[rgba(0,212,255,0.15)]" />
+      <div className="flex items-center justify-center py-1.5 bg-[rgba(0,0,0,0.85)]">
+        <span className="font-mono text-[8px] tracking-[0.3em] text-[#1a3a4a] uppercase">
+          CLASSIFIED &nbsp;// &nbsp;APEX-SENTINEL COUNTER-UAS NETWORK &nbsp;// &nbsp;NATO
+          EASTERN FLANK
+        </span>
+      </div>
     </div>
-  );
-}
-
-function Mono({
-  children,
-  className = "",
-  style,
-}: {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <span className={`font-mono text-xs tracking-wide ${className}`} style={style}>
-      {children}
-    </span>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SLIDE 1 — APEX SENTINEL
+   SLIDE CONTENT — HUD annotation panels
    ═══════════════════════════════════════════════════════════ */
+
 function SlideTitle() {
   return (
-    <div className="relative min-h-screen flex items-end z-10">
-      <SlideBg src="/images/slide-01-hero.jpg" overlay="rgba(10,10,15,0.55)" />
-      <div className="relative z-10 pb-24 pl-2">
-        <motion.h1
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-[6px] uppercase text-white leading-none"
-        >
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <h1 className="font-mono text-[32px] sm:text-[40px] font-bold tracking-[0.15em] text-white uppercase leading-none">
           APEX SENTINEL
-        </motion.h1>
-
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="mt-5 mb-5"
-        >
-          <div className="w-[120px] h-[2px] bg-[#00d4ff]" />
-        </motion.div>
-
-        <motion.p
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-sm tracking-[2px] uppercase text-[#7a9ab8] mb-10"
-        >
-          Distributed Civilian Counter-UAS Sensor Network
-        </motion.p>
-
-        <motion.div
-          custom={3}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="flex items-center gap-3 text-xs font-mono text-[#556a7a]"
-        >
-          {["Acoustic", "RF", "RTL-SDR", "TDoA", "EKF", "LSTM"].map((t, i) => (
-            <span key={t} className="flex items-center gap-3">
-              <span>{t}</span>
-              {i < 5 && <span className="text-[#00d4ff]/30">·</span>}
-            </span>
-          ))}
-        </motion.div>
-      </div>
+        </h1>
+      </motion.div>
+      <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-3">
+        <div className="w-[80px] h-[1px] bg-[#00d4ff]" />
+      </motion.div>
+      <motion.p
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 font-mono text-[11px] tracking-[0.12em] text-[#7a9ab8] uppercase"
+      >
+        Distributed Civilian Counter-UAS Sensor Network
+      </motion.p>
+      <motion.div
+        custom={3}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 flex items-center gap-2 font-mono text-[9px] tracking-[0.1em] text-[#3a5a6a]"
+      >
+        {["Acoustic", "RF", "RTL-SDR", "TDoA", "EKF", "LSTM"].map((t, i) => (
+          <span key={t} className="flex items-center gap-2">
+            <span>{t}</span>
+            {i < 5 && <span className="text-[#00d4ff]/20">&middot;</span>}
+          </span>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={4}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-6 font-mono text-[10px] tracking-[0.2em] text-[#00d4ff]/40 uppercase"
+      >
+        HACKATHON 2026
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 2 — THE COST ASYMMETRY
-   ═══════════════════════════════════════════════════════════ */
 function SlideProblem() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-02-threat.jpg" overlay="rgba(10,10,15,0.6)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-12"
-        >
-          The Cost Asymmetry
-        </motion.h2>
-
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mb-12"
-        >
-          {/* Attacker card */}
-          <Card borderColor="rgba(255,68,68,0.25)">
-            <div className="text-4xl sm:text-5xl font-extrabold text-[#ff4444] font-mono mb-3">
-              $<CountUp target={400} duration={1000} />
-            </div>
-            <div className="text-sm font-semibold text-white mb-1">FPV Combat Drone</div>
-            <Mono className="text-[#7a9ab8]">Mass-produced, GPS-guided, 150km/h</Mono>
-          </Card>
-
-          {/* Defender card */}
-          <Card borderColor="rgba(255,170,0,0.25)">
-            <div className="text-4xl sm:text-5xl font-extrabold text-[#ffaa00] font-mono mb-3">
-              $<CountUp target={2} duration={800} suffix=",000,000" />
-            </div>
-            <div className="text-sm font-semibold text-white mb-1">Counter-UAS System</div>
-            <Mono className="text-[#7a9ab8]">Fixed position, trained operators, single-point coverage</Mono>
-          </Card>
-        </motion.div>
-
-        <motion.p
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-base italic text-[#7a9ab8] max-w-2xl leading-relaxed"
-        >
-          &ldquo;500,000+ drone attacks since 2022. The defenders are outspent 5,000:1.&rdquo;
-        </motion.p>
-      </div>
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#ff4444]/60 uppercase">
+          THREAT ASSESSMENT
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          COST ASYMMETRY
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-5 space-y-2"
+      >
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[22px] font-bold text-[#ff4444]">
+            $<CountUp target={400} duration={800} />
+          </span>
+          <span className="font-mono text-[10px] text-[#7a9ab8] tracking-wider">
+            FPV COMBAT DRONE
+          </span>
+        </div>
+        <div className="font-mono text-[9px] text-[#3a5a6a] tracking-wider">VS</div>
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[22px] font-bold text-[#ffaa00]">
+            $<CountUp target={2} duration={600} suffix="M" />
+          </span>
+          <span className="font-mono text-[10px] text-[#7a9ab8] tracking-wider">
+            C-UAS SYSTEM
+          </span>
+        </div>
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-5"
+      >
+        <div className="font-mono text-[10px] text-[#556a7a] leading-relaxed max-w-[420px]">
+          500,000+ attacks since 2022. Defenders outspent 5,000:1.
+          <br />
+          Current C-UAS: fixed position, single-point, trained operators.
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 3 — THE INSIGHT
-   ═══════════════════════════════════════════════════════════ */
 function SlideInsight() {
   const caps = [
-    { label: "MEMS Mic", spec: "94dB SNR", color: "#00d4ff" },
-    { label: "WiFi Radio", spec: "2.4GHz passive", color: "#00d4ff" },
-    { label: "GPS", spec: "±3m accuracy", color: "#00d4ff" },
-    { label: "NPU", spec: "YAMNet 156ms", color: "#ffaa00" },
-    { label: "4G Uplink", spec: "<50ms latency", color: "#ffaa00" },
+    { label: "MEMS MIC", spec: "94dB SNR" },
+    { label: "WIFI 2.4GHz", spec: "PASSIVE" },
+    { label: "GPS", spec: "±3m" },
+    { label: "NPU", spec: "YAMNET 156ms" },
+    { label: "4G UPLINK", spec: "<50ms" },
   ];
-
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-03-gap.jpg" overlay="rgba(10,10,15,0.6)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4"
-        >
-          500 Million Sensors Already Deployed
-        </motion.h2>
-
-        <motion.p
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-base text-[#7a9ab8] mb-10 max-w-2xl"
-        >
-          Every smartphone has the hardware for drone detection. MEMS microphones,
-          WiFi radios, GPS receivers, neural processing — all in your pocket.
-        </motion.p>
-
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-wrap gap-3 mb-12"
-        >
-          {caps.map((c) => (
-            <div
-              key={c.label}
-              className="flex items-center gap-3 px-4 py-2.5 rounded bg-[rgba(10,12,18,0.7)] backdrop-blur-sm"
-              style={{ border: `1px solid ${c.color}20` }}
-            >
-              <span className="text-sm font-semibold text-white">{c.label}</span>
-              <span className="font-mono text-xs" style={{ color: c.color }}>
-                {c.spec}
-              </span>
-            </div>
-          ))}
-        </motion.div>
-
-        <motion.p
-          custom={3}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-sm text-[#556a7a] max-w-2xl"
-        >
-          APEX Sentinel turns existing hardware into a distributed defense grid.
-          No new infrastructure. No procurement cycles. Deploy tomorrow.
-        </motion.p>
-      </div>
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+          STRATEGIC ADVANTAGE
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          500M SENSORS DEPLOYED
+        </h2>
+      </motion.div>
+      <motion.p
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-3 font-mono text-[10px] text-[#556a7a] leading-relaxed max-w-[420px]"
+      >
+        Every smartphone has the hardware for drone detection.
+        No new infrastructure. Deploy tomorrow.
+      </motion.p>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 flex flex-wrap gap-2"
+      >
+        {caps.map((c) => (
+          <div
+            key={c.label}
+            className="px-3 py-1.5 glass font-mono text-[9px] tracking-wider"
+          >
+            <span className="text-[#00d4ff]">{c.label}</span>
+            <span className="text-[#3a5a6a] ml-2">{c.spec}</span>
+          </div>
+        ))}
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 4 — DETECTION PIPELINE
-   ═══════════════════════════════════════════════════════════ */
 function SlidePipeline() {
   const steps = [
-    { label: "DETECT", sub: "Sensor capture", color: "#00d4ff" },
-    { label: "CLASSIFY", sub: "ML inference", color: "#ffaa00" },
-    { label: "TRACK", sub: "Sensor fusion", color: "#ffffff" },
-    { label: "ALERT", sub: "CoT to ATAK", color: "#00e676" },
+    { label: "DETECT", color: "#00d4ff" },
+    { label: "CLASSIFY", color: "#ffaa00" },
+    { label: "TRACK", color: "#ffffff" },
+    { label: "ALERT", color: "#00e676" },
   ];
-
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-04-solution.jpg" overlay="rgba(10,10,15,0.6)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-12"
-        >
-          Detection Pipeline
-        </motion.h2>
-
-        {/* SVG Pipeline Diagram */}
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="mb-12"
-        >
-          <svg
-            viewBox="0 0 800 120"
-            className="w-full max-w-4xl"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {steps.map((step, i) => {
-              const x = i * 200 + 10;
-              return (
-                <g key={step.label}>
-                  {/* Box */}
-                  <rect
-                    x={x}
-                    y={20}
-                    width={140}
-                    height={52}
-                    rx={4}
-                    stroke={step.color}
-                    strokeWidth={1}
-                    fill="rgba(10,12,18,0.6)"
-                  />
-                  {/* Label */}
-                  <text
-                    x={x + 70}
-                    y={48}
-                    textAnchor="middle"
-                    fill={step.color}
-                    fontFamily="monospace"
-                    fontSize={14}
-                    fontWeight={700}
-                  >
-                    {step.label}
-                  </text>
-                  {/* Sub label */}
-                  <text
-                    x={x + 70}
-                    y={100}
-                    textAnchor="middle"
-                    fill="#556a7a"
-                    fontFamily="monospace"
-                    fontSize={11}
-                  >
-                    {step.sub}
-                  </text>
-                  {/* Arrow connector */}
-                  {i < steps.length - 1 && (
-                    <>
-                      <line
-                        x1={x + 140}
-                        y1={46}
-                        x2={x + 200}
-                        y2={46}
-                        stroke="#556a7a"
-                        strokeWidth={1}
-                      />
-                      <polygon
-                        points={`${x + 196},42 ${x + 200},46 ${x + 196},50`}
-                        fill="#556a7a"
-                      />
-                    </>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-        </motion.div>
-
-        {/* Stats row */}
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="flex flex-wrap gap-4"
-        >
-          {[
-            "<500ms end-to-end",
-            "Multi-sensor fusion",
-            "ATAK integration",
-          ].map((s) => (
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+          SYSTEM ARCHITECTURE
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          DETECTION PIPELINE
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-5 flex items-center gap-1"
+      >
+        {steps.map((s, i) => (
+          <div key={s.label} className="flex items-center gap-1">
             <div
-              key={s}
-              className="px-4 py-2 rounded bg-[rgba(10,12,18,0.6)] border border-white/[0.06] font-mono text-xs text-[#7a9ab8]"
+              className="px-3 py-1.5 glass font-mono text-[10px] font-bold tracking-wider"
+              style={{ color: s.color, borderColor: `${s.color}30` }}
             >
-              {s}
+              {s.label}
             </div>
-          ))}
-        </motion.div>
-      </div>
+            {i < steps.length - 1 && (
+              <span className="font-mono text-[10px] text-[#3a5a6a]">&rarr;</span>
+            )}
+          </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4"
+      >
+        <div className="font-mono text-[10px] text-[#556a7a]">
+          &lt;500ms end-to-end &middot; Multi-sensor fusion &middot; ATAK integration
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 5 — RF SPECTRUM ANALYSIS
-   ═══════════════════════════════════════════════════════════ */
 function SlideRF() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-05-rf.jpg" overlay="rgba(10,10,15,0.65)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4"
-        >
-          See What Others Can&apos;t
-        </motion.h2>
-
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8"
-        >
-          {/* Left: description */}
-          <div>
-            <p className="text-base text-[#7a9ab8] leading-relaxed mb-6">
-              Passive RF monitoring detects drone control signals before visual or
-              acoustic contact. FHSS hopping patterns at 2.4GHz and 5.8GHz are captured
-              via RTL-SDR, analyzed through waterfall spectral decomposition, and
-              classified against a known threat library.
-            </p>
-            <div className="space-y-3">
-              {[
-                { label: "Frequency", value: "2.4GHz + 5.8GHz ISM bands" },
-                { label: "Method", value: "FHSS hop pattern analysis" },
-                { label: "Latency", value: "<200ms signal classification" },
-                { label: "Hardware", value: "RTL-SDR v3/v4 ($30 dongle)" },
-              ].map((row) => (
-                <div key={row.label} className="flex items-baseline gap-3">
-                  <Mono className="text-[#556a7a] uppercase w-24 shrink-0">{row.label}</Mono>
-                  <span className="text-sm text-white">{row.value}</span>
-                </div>
-              ))}
-            </div>
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+          PASSIVE MONITORING
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          RF SPECTRUM ANALYSIS
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-1.5"
+      >
+        {[
+          { k: "FREQ", v: "2.4GHz + 5.8GHz ISM" },
+          { k: "METHOD", v: "FHSS hop pattern analysis" },
+          { k: "LATENCY", v: "<200ms signal classification" },
+          { k: "HARDWARE", v: "RTL-SDR v3/v4 ($30)" },
+        ].map((r) => (
+          <div key={r.k} className="flex items-baseline gap-3">
+            <span className="font-mono text-[9px] text-[#3a5a6a] tracking-wider w-[70px] shrink-0 uppercase">
+              {r.k}
+            </span>
+            <span className="font-mono text-[10px] text-[#7a9ab8]">{r.v}</span>
           </div>
-
-          {/* Right: SVG waterfall visualization */}
-          <div className="flex items-center justify-center">
-            <svg
-              viewBox="0 0 360 260"
-              className="w-full max-w-[360px]"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Y axis */}
-              <line x1={50} y1={20} x2={50} y2={220} stroke="#333" strokeWidth={1} />
-              {/* X axis */}
-              <line x1={50} y1={220} x2={340} y2={220} stroke="#333" strokeWidth={1} />
-
-              {/* Y label */}
-              <text x={12} y={125} fill="#556a7a" fontFamily="monospace" fontSize={9} transform="rotate(-90,12,125)">
-                Frequency (GHz)
-              </text>
-              {/* X label */}
-              <text x={190} y={248} fill="#556a7a" fontFamily="monospace" fontSize={9} textAnchor="middle">
-                Time
-              </text>
-
-              {/* Frequency band labels */}
-              <text x={44} y={58} fill="#556a7a" fontFamily="monospace" fontSize={9} textAnchor="end">5.8</text>
-              <text x={44} y={108} fill="#556a7a" fontFamily="monospace" fontSize={9} textAnchor="end">5.2</text>
-              <text x={44} y={158} fill="#556a7a" fontFamily="monospace" fontSize={9} textAnchor="end">2.4</text>
-              <text x={44} y={208} fill="#556a7a" fontFamily="monospace" fontSize={9} textAnchor="end">0.9</text>
-
-              {/* Spectral bands - horizontal color bars */}
-              {[
-                { y: 45, h: 18, opacity: 0.25 },
-                { y: 68, h: 14, opacity: 0.15 },
-                { y: 95, h: 18, opacity: 0.20 },
-                { y: 118, h: 14, opacity: 0.10 },
-                { y: 142, h: 22, opacity: 0.30 },
-                { y: 168, h: 14, opacity: 0.12 },
-                { y: 187, h: 18, opacity: 0.18 },
-                { y: 210, h: 6, opacity: 0.08 },
-              ].map((band, i) => (
-                <rect
-                  key={i}
-                  x={55}
-                  y={band.y}
-                  width={280}
-                  height={band.h}
-                  rx={1}
-                  fill="#00d4ff"
-                  opacity={band.opacity}
-                />
-              ))}
-
-              {/* Detected drone signals - amber markers */}
-              {[
-                { cx: 120, cy: 52 },
-                { cx: 195, cy: 150 },
-                { cx: 248, cy: 48 },
-                { cx: 280, cy: 152 },
-              ].map((dot, i) => (
-                <g key={i}>
-                  <circle cx={dot.cx} cy={dot.cy} r={5} fill="#ffaa00" opacity={0.9} />
-                  <circle cx={dot.cx} cy={dot.cy} r={10} stroke="#ffaa00" strokeWidth={1} opacity={0.3} fill="none" />
-                </g>
-              ))}
-
-              {/* Legend */}
-              <circle cx={70} cy={240} r={4} fill="#ffaa00" />
-              <text x={80} y={243} fill="#7a9ab8" fontFamily="monospace" fontSize={9}>
-                Detected drone signal
-              </text>
-            </svg>
-          </div>
-        </motion.div>
-      </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 font-mono text-[10px] text-[#556a7a] max-w-[420px]"
+      >
+        Waterfall spectral decomposition detects drone control before visual or acoustic contact.
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 6 — ELRS FINGERPRINTING
-   ═══════════════════════════════════════════════════════════ */
 function SlideELRS() {
-  const capabilities = [
-    { code: "PROTOCOL ID", desc: "Identifies ELRS, Crossfire, DJI, analog" },
-    { code: "TX FINGERPRINT", desc: "Unique per-transmitter identification" },
-    { code: "RF BEARING", desc: "Direction finding from signal analysis" },
-    { code: "PRIVACY GUARD", desc: "GDPR-compliant data pipeline" },
+  const caps = [
+    { code: "PROTOCOL ID", desc: "ELRS, Crossfire, DJI, analog" },
+    { code: "TX FINGERPRINT", desc: "Unique per-transmitter ID" },
+    { code: "RF BEARING", desc: "Direction finding from signal" },
+    { code: "PRIVACY GUARD", desc: "GDPR-compliant pipeline" },
   ];
-
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-06-elrs.jpg" overlay="rgba(10,10,15,0.65)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4"
-        >
-          Digital DNA Extraction
-        </motion.h2>
-
-        <motion.p
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-base text-[#7a9ab8] mb-10 max-w-2xl"
-        >
-          Every transmitter leaves a unique electromagnetic signature.
-          We classify it in real time.
-        </motion.p>
-
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-        >
-          {/* Left: capabilities */}
-          <div className="lg:col-span-2 space-y-4">
-            {capabilities.map((cap) => (
-              <div key={cap.code} className="flex items-baseline gap-4">
-                <code className="font-mono text-sm font-bold text-[#00d4ff] w-40 shrink-0 tracking-wide">
-                  {cap.code}
-                </code>
-                <span className="text-sm text-[#7a9ab8]">&mdash;</span>
-                <span className="text-sm text-white/80">{cap.desc}</span>
-              </div>
-            ))}
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+          RF INTELLIGENCE
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          DIGITAL DNA EXTRACTION
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-2"
+      >
+        {caps.map((c) => (
+          <div key={c.code} className="flex items-baseline gap-3">
+            <span className="font-mono text-[10px] font-bold text-[#00d4ff] w-[130px] shrink-0 tracking-wider">
+              {c.code}
+            </span>
+            <span className="font-mono text-[10px] text-[#556a7a]">{c.desc}</span>
           </div>
-
-          {/* Right: stats */}
-          <Card borderColor="rgba(255,255,255,0.06)">
-            <div className="space-y-5">
-              {[
-                { value: "8", label: "modules" },
-                { value: "99", label: "tests" },
-                { value: "4", label: "protocol families" },
-              ].map((s) => (
-                <div key={s.label}>
-                  <div className="text-2xl font-extrabold text-white font-mono">
-                    {s.value}
-                  </div>
-                  <Mono className="text-[#556a7a] uppercase">{s.label}</Mono>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-      </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-5 flex items-center gap-4"
+      >
+        {[
+          { v: "8", l: "modules" },
+          { v: "99", l: "tests" },
+          { v: "4", l: "protocols" },
+        ].map((s) => (
+          <div key={s.l} className="glass px-3 py-1.5">
+            <span className="font-mono text-[14px] font-bold text-white">{s.v}</span>
+            <span className="font-mono text-[8px] text-[#3a5a6a] ml-1.5 uppercase tracking-wider">
+              {s.l}
+            </span>
+          </div>
+        ))}
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 7 — THE 4D NODE MODEL
-   ═══════════════════════════════════════════════════════════ */
 function Slide4D() {
   const tiers = [
-    {
-      tier: "TIER 1",
-      title: "RTL-SDR + Phone",
-      clock: "GPS-PPS ±1μs",
-      accuracy: "±12m",
-      weight: "1.0",
-      color: "#00d4ff",
-    },
-    {
-      tier: "TIER 2",
-      title: "Smartphone",
-      clock: "NTP ±50ms",
-      accuracy: "±62m",
-      weight: "0.3",
-      color: "#ffaa00",
-    },
-    {
-      tier: "TIER 3",
-      title: "LoRa Relay",
-      clock: "±500ms",
-      accuracy: "Relay only",
-      weight: "0.0",
-      color: "#556a7a",
-    },
+    { tier: "T1", name: "RTL-SDR+Phone", clock: "GPS-PPS ±1μs", acc: "±12m", w: "1.0", color: "#00d4ff" },
+    { tier: "T2", name: "Smartphone", clock: "NTP ±50ms", acc: "±62m", w: "0.3", color: "#ffaa00" },
+    { tier: "T3", name: "LoRa Relay", clock: "±500ms", acc: "Relay", w: "0.0", color: "#3a5a6a" },
   ];
-
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-07-arch.jpg" overlay="rgba(10,10,15,0.65)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-3"
-        >
-          Every Node in 4-Dimensional Space
-        </motion.h2>
-
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="mb-10"
-        >
-          <code className="font-mono text-sm text-[#00d4ff]">
-            Node(lat, lon, alt, timePrecisionUs)
-          </code>
-        </motion.div>
-
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10"
-        >
-          {tiers.map((t) => (
-            <Card key={t.tier} borderColor={`${t.color}30`}>
-              <Mono className="uppercase tracking-wider mb-3 block" style={{ color: t.color }}>
-                {t.tier}
-              </Mono>
-              <div className="text-lg font-bold text-white mb-4">{t.title}</div>
-              <div className="space-y-2">
-                {[
-                  { label: "Clock", value: t.clock },
-                  { label: "Accuracy", value: t.accuracy },
-                  { label: "Weight", value: t.weight },
-                ].map((row) => (
-                  <div key={row.label} className="flex justify-between items-baseline">
-                    <Mono className="text-[#556a7a] uppercase">{row.label}</Mono>
-                    <span className="text-sm font-mono text-white/80">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          ))}
-        </motion.div>
-
-        <motion.p
-          custom={3}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-sm text-[#556a7a] max-w-3xl"
-        >
-          TDoA triangulation weights each node by clock quality.
-          The system never lies about what it knows.
-        </motion.p>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 8 — ENGINEERING DEPTH
-   ═══════════════════════════════════════════════════════════ */
-function SlideDepth() {
-  const metrics = [
-    { value: 3301, label: "Tests Passing", suffix: "" },
-    { value: 95, label: "Code Coverage", suffix: "%+" },
-    { value: 21, label: "Dev Waves", suffix: "" },
-    { value: 19, label: "Gap Analysis", suffix: "/19" },
-  ];
-
-  return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-08-tests.jpg" overlay="rgba(10,10,15,0.6)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-12"
-        >
-          21 Waves. 3,301 Tests. Zero Compromises.
-        </motion.h2>
-
-        {/* Metric cards */}
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10 max-w-3xl"
-        >
-          {metrics.map((m) => (
-            <Card key={m.label} borderColor="rgba(255,255,255,0.06)">
-              <div className="text-3xl font-extrabold text-white font-mono mb-1">
-                <CountUp target={m.value} duration={1800} suffix={m.suffix} />
-              </div>
-              <Mono className="text-[#556a7a] uppercase">{m.label}</Mono>
-            </Card>
-          ))}
-        </motion.div>
-
-        {/* Wave completion dots */}
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="mb-8"
-        >
-          <Mono className="text-[#556a7a] uppercase block mb-3">Wave Completion</Mono>
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: 21 }, (_, i) => (
-              <div
-                key={i}
-                className="w-3 h-3 rounded-sm bg-[#00e676]/80"
-                title={`W${i + 1}`}
-              />
-            ))}
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+          SENSOR FUSION
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          4D NODE MODEL
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-3"
+      >
+        <code className="font-mono text-[11px] text-[#00d4ff]">
+          Node(lat, lon, alt, timePrecision&mu;s)
+        </code>
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-2"
+      >
+        {tiers.map((t) => (
+          <div key={t.tier} className="flex items-baseline gap-3">
+            <span
+              className="font-mono text-[10px] font-bold w-[24px] shrink-0"
+              style={{ color: t.color }}
+            >
+              {t.tier}
+            </span>
+            <span className="font-mono text-[10px] text-white w-[110px] shrink-0">{t.name}</span>
+            <span className="font-mono text-[9px] text-[#556a7a] w-[100px] shrink-0">
+              {t.clock}
+            </span>
+            <span className="font-mono text-[9px] text-[#3a5a6a]">{t.acc}</span>
           </div>
-          <div className="flex justify-between mt-1.5 max-w-[calc(21*18px)]">
-            <Mono className="text-[#556a7a]">W1</Mono>
-            <Mono className="text-[#556a7a]">W21</Mono>
-          </div>
-        </motion.div>
-
-        <motion.p
-          custom={3}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-sm text-[#556a7a] max-w-2xl"
-        >
-          Mutation testing at 85%+ on critical paths. IEC 61508 safety compliance.
-          Full test pyramid: unit, integration, E2E.
-        </motion.p>
-      </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={3}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 font-mono text-[10px] text-[#3a5a6a] max-w-[420px]"
+      >
+        TDoA triangulation weights each node by clock quality.
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 9 — OPEN SOURCE
-   ═══════════════════════════════════════════════════════════ */
-function SlideOSS() {
+function SlideEngineering() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-09-timeline.jpg" overlay="rgba(10,10,15,0.6)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-4"
-        >
-          Built in Public. Battle-Ready.
-        </motion.h2>
-
-        <motion.p
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-base text-[#7a9ab8] mb-10 max-w-2xl"
-        >
-          Not a prototype. A production-grade sensor fusion library.
-        </motion.p>
-
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl"
-        >
-          {/* GitHub card */}
-          <Card borderColor="rgba(255,255,255,0.08)">
-            <Mono className="text-[#556a7a] uppercase block mb-4">Repository</Mono>
-            <div className="space-y-3">
-              <div className="font-mono text-sm text-[#00d4ff]">
-                fratilanico/apex-sentinel
-              </div>
-              {[
-                "34+ TypeScript modules",
-                "Full test pyramid: unit → integration → E2E",
-                "MIT License",
-              ].map((line) => (
-                <div key={line} className="flex items-start gap-2">
-                  <span className="text-[#556a7a] mt-0.5 shrink-0">—</span>
-                  <span className="text-sm text-white/80">{line}</span>
-                </div>
-              ))}
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00e676]/60 uppercase">
+          VERIFICATION
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          ENGINEERING DEPTH
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-5 flex items-center gap-4"
+      >
+        {[
+          { v: 21, l: "WAVES", s: "" },
+          { v: 3301, l: "TESTS", s: "" },
+          { v: 0, l: "FAILING", s: "" },
+        ].map((m) => (
+          <div key={m.l} className="glass px-3 py-2">
+            <div className="font-mono text-[18px] font-bold text-white tabular-nums">
+              <CountUp target={m.v} duration={1500} suffix={m.s} />
             </div>
-          </Card>
-
-          {/* Demo card */}
-          <Card borderColor="rgba(255,255,255,0.08)">
-            <Mono className="text-[#556a7a] uppercase block mb-4">Live Demo</Mono>
-            <div className="font-mono text-sm text-[#00e676] mb-4">
-              apex-sentinel-demo.vercel.app
+            <div className="font-mono text-[8px] text-[#3a5a6a] tracking-[0.15em] uppercase">
+              {m.l}
             </div>
-            <p className="text-sm text-[#7a9ab8] leading-relaxed">
-              Real-time dashboard showing acoustic detection, RF analysis,
-              and multi-sensor fusion on synthetic threat data.
-            </p>
-          </Card>
-        </motion.div>
-      </div>
+          </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-1"
+      >
+        {[
+          "95%+ code coverage",
+          "Mutation testing 85%+ on critical paths",
+          "IEC 61508 safety compliance",
+          "Full pyramid: unit → integration → E2E",
+        ].map((line) => (
+          <div key={line} className="flex items-center gap-2">
+            <span className="font-mono text-[8px] text-[#00d4ff]">&gt;</span>
+            <span className="font-mono text-[10px] text-[#556a7a]">{line}</span>
+          </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={3}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4"
+      >
+        <div className="flex items-center gap-1">
+          {Array.from({ length: 21 }, (_, i) => (
+            <div
+              key={i}
+              className="w-[10px] h-[4px] rounded-[1px] bg-[#00e676]/70"
+              title={`W${i + 1}`}
+            />
+          ))}
+          <span className="ml-2 font-mono text-[8px] text-[#3a5a6a]">21/21 COMPLETE</span>
+        </div>
+      </motion.div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SLIDE 10 — ROADMAP
-   ═══════════════════════════════════════════════════════════ */
+function SlideOpenSource() {
+  return (
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00e676]/60 uppercase">
+          PUBLIC REPOSITORY
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          OPEN SOURCE
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-3"
+      >
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[9px] text-[#3a5a6a] w-[50px] shrink-0">REPO</span>
+          <span className="font-mono text-[11px] text-[#00d4ff]">
+            github.com/fratilanico/apex-sentinel
+          </span>
+        </div>
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[9px] text-[#3a5a6a] w-[50px] shrink-0">DEMO</span>
+          <span className="font-mono text-[11px] text-[#00e676]">
+            apex-sentinel-demo.vercel.app
+          </span>
+        </div>
+        <div className="flex items-baseline gap-3">
+          <span className="font-mono text-[9px] text-[#3a5a6a] w-[50px] shrink-0">LICENSE</span>
+          <span className="font-mono text-[11px] text-[#7a9ab8]">MIT</span>
+        </div>
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-1"
+      >
+        {["34+ TypeScript modules", "Full test pyramid", "Production-grade sensor fusion library"].map(
+          (line) => (
+            <div key={line} className="flex items-center gap-2">
+              <span className="font-mono text-[8px] text-[#00d4ff]">&mdash;</span>
+              <span className="font-mono text-[10px] text-[#556a7a]">{line}</span>
+            </div>
+          )
+        )}
+      </motion.div>
+    </div>
+  );
+}
+
 function SlideRoadmap() {
   const phases = [
-    {
-      phase: "NOW",
-      title: "Open source library + live demo dashboard",
-      color: "#00d4ff",
-    },
-    {
-      phase: "NEXT",
-      title: "Android sensor app + field testing Romania",
-      color: "#ffaa00",
-    },
-    {
-      phase: "FUTURE",
-      title: "NATO interop · ATAK plugin · Municipal deployment",
-      color: "#00e676",
-    },
+    { phase: "NOW", desc: "Open source library + live demo dashboard", color: "#00d4ff" },
+    { phase: "NEXT", desc: "Android sensor app + field testing Romania", color: "#ffaa00" },
+    { phase: "FUTURE", desc: "NATO interop · ATAK plugin · Municipal deploy", color: "#00e676" },
   ];
-
   return (
-    <div className="relative min-h-screen flex flex-col justify-center z-10">
-      <SlideBg src="/images/slide-10-cta.jpg" overlay="rgba(10,10,15,0.55)" />
-      <div className="relative z-10">
-        <motion.h2
-          custom={0}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight mb-12"
-        >
-          Roadmap
-        </motion.h2>
-
-        <motion.div
-          custom={1}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-4xl mb-16"
-        >
-          {phases.map((p) => (
-            <Card key={p.phase} borderColor={`${p.color}25`}>
-              <Mono className="uppercase tracking-wider block mb-3" style={{ color: p.color }}>
-                {p.phase}
-              </Mono>
-              <p className="text-sm text-white/80 leading-relaxed">{p.title}</p>
-            </Card>
-          ))}
-        </motion.div>
-
-        <motion.div
-          custom={2}
-          variants={fade}
-          initial="hidden"
-          animate="visible"
-          className="space-y-3"
-        >
-          <div className="font-mono text-sm text-[#7a9ab8]">
-            github.com/fratilanico/apex-sentinel
+    <div className="flex flex-col justify-end h-full pb-20">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+          DEPLOYMENT TIMELINE
+        </span>
+        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+          ROADMAP
+        </h2>
+      </motion.div>
+      <motion.div
+        custom={1}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-4 space-y-2"
+      >
+        {phases.map((p) => (
+          <div key={p.phase} className="flex items-baseline gap-3">
+            <span
+              className="font-mono text-[10px] font-bold w-[55px] shrink-0 tracking-wider"
+              style={{ color: p.color }}
+            >
+              {p.phase}
+            </span>
+            <span className="font-mono text-[10px] text-[#556a7a]">{p.desc}</span>
           </div>
-          <div className="font-mono text-xs text-[#556a7a]">
-            nico@apexos.dev
-          </div>
-        </motion.div>
-      </div>
+        ))}
+      </motion.div>
+      <motion.div
+        custom={2}
+        variants={fade}
+        initial="hidden"
+        animate="visible"
+        className="mt-6 space-y-1"
+      >
+        <div className="font-mono text-[10px] text-[#7a9ab8]">
+          github.com/fratilanico/apex-sentinel
+        </div>
+        <div className="font-mono text-[9px] text-[#3a5a6a]">nico@apexos.dev</div>
+      </motion.div>
     </div>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════
-   MAIN PRESENTATION CONTROLLER
+   RIGHT SIDE PANEL — contextual stats per slide
    ═══════════════════════════════════════════════════════════ */
+
+function RightPanel({ slideId }: { slideId: SlideId }) {
+  const panels: Partial<Record<SlideId, { title: string; items: string[] }>> = {
+    title: {
+      title: "NETWORK STATUS",
+      items: [
+        "15 SENSOR NODES",
+        "4 THREAT VECTORS",
+        "9 DEFENSE ARCS",
+        "COVERAGE: 238,397 km²",
+        "STATUS: OPERATIONAL",
+      ],
+    },
+    problem: {
+      title: "THREAT METRICS",
+      items: ["500K+ ATTACKS", "5,000:1 COST RATIO", "150km/h APPROACH", "GPS-GUIDED", "$400 UNIT COST"],
+    },
+    pipeline: {
+      title: "LATENCY BUDGET",
+      items: ["DETECT: 50ms", "CLASSIFY: 156ms", "FUSE: 80ms", "UPLINK: 50ms", "TOTAL: <500ms"],
+    },
+    "4d-model": {
+      title: "NODE GRID",
+      items: [
+        `T1: ${SENSOR_NODES.filter((n) => n.tier === 1).length} NODES`,
+        `T2: ${SENSOR_NODES.filter((n) => n.tier === 2).length} NODES`,
+        `T3: ${SENSOR_NODES.filter((n) => n.tier === 3).length} NODES`,
+        "MESH: 10 ARCS",
+        "THREATS: 4 VECTORS",
+      ],
+    },
+    engineering: {
+      title: "QUALITY GATES",
+      items: ["UNIT: 2,847", "INTEGRATION: 312", "E2E: 142", "MUTATION: 85%+", "COVERAGE: 95%+"],
+    },
+  };
+
+  const panel = panels[slideId];
+  if (!panel) return null;
+
+  return (
+    <motion.div
+      key={slideId}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, delay: 0.2 }}
+      className="fixed top-[72px] right-6 z-20 pointer-events-none"
+    >
+      <div className="glass px-4 py-3 w-[180px]">
+        <div className="font-mono text-[8px] tracking-[0.2em] text-[#00d4ff]/60 uppercase mb-2">
+          {panel.title}
+        </div>
+        {panel.items.map((item) => (
+          <div key={item} className="font-mono text-[9px] text-[#556a7a] leading-[1.7]">
+            {item}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAV DOTS — bottom center
+   ═══════════════════════════════════════════════════════════ */
+
+function NavDots({
+  idx,
+  total,
+  onGo,
+}: {
+  idx: number;
+  total: number;
+  onGo: (i: number) => void;
+}) {
+  return (
+    <div className="fixed bottom-[28px] left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+      {Array.from({ length: total }, (_, i) => (
+        <button
+          key={i}
+          onClick={() => onGo(i)}
+          aria-label={`Slide ${i + 1}`}
+          className={`nav-dot ${i === idx ? "active" : ""}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROGRESS LINE — bottom 1px
+   ═══════════════════════════════════════════════════════════ */
+
+function ProgressLine({ idx, total }: { idx: number; total: number }) {
+  return (
+    <div className="fixed bottom-[22px] left-0 right-0 z-25 h-[1px] bg-[rgba(0,212,255,0.08)]">
+      <motion.div
+        className="h-full bg-[#00d4ff]/40"
+        animate={{ width: `${((idx + 1) / total) * 100}%` }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MAIN PRESENTATION
+   ═══════════════════════════════════════════════════════════ */
+
 export default function Presentation() {
   const [idx, setIdx] = useState(0);
 
-  const go = useCallback(
-    (to: number) => {
-      if (to < 0 || to >= SLIDES.length) return;
-      setIdx(to);
-    },
-    [],
-  );
+  const go = useCallback((to: number) => {
+    if (to < 0 || to >= SLIDES.length) return;
+    setIdx(to);
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -969,96 +1059,59 @@ export default function Presentation() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const slide = SLIDES[idx].id as SlideId;
+  const slideId = SLIDES[idx].id;
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0a0f] overflow-hidden">
-      {/* ── Slide content ── */}
-      <div className="flex-1 relative overflow-hidden">
+    <>
+      {/* Layer 1: Globe */}
+      <GlobeBackground />
+
+      {/* Layer 2: Vignette */}
+      <div className="vignette" />
+
+      {/* Layer 3: HUD */}
+      <HudTopBar />
+      <ClassificationBar />
+
+      {/* Layer 4: Right panel (contextual) */}
+      <AnimatePresence mode="wait">
+        <RightPanel slideId={slideId} />
+      </AnimatePresence>
+
+      {/* Layer 5: Slide content — bottom left */}
+      <div className="fixed bottom-[40px] left-6 z-20 w-[520px] max-w-[calc(100vw-48px)] h-[calc(100vh-120px)] pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
-            key={slide}
+            key={slideId}
             variants={slideVariants}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute inset-0 overflow-y-auto"
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="h-full"
           >
-            <div className="max-w-5xl mx-auto px-8 sm:px-12">
-              {slide === "title" && <SlideTitle />}
-              {slide === "problem" && <SlideProblem />}
-              {slide === "insight" && <SlideInsight />}
-              {slide === "pipeline" && <SlidePipeline />}
-              {slide === "rf" && <SlideRF />}
-              {slide === "elrs" && <SlideELRS />}
-              {slide === "4d" && <Slide4D />}
-              {slide === "depth" && <SlideDepth />}
-              {slide === "oss" && <SlideOSS />}
-              {slide === "roadmap" && <SlideRoadmap />}
-            </div>
+            {slideId === "title" && <SlideTitle />}
+            {slideId === "problem" && <SlideProblem />}
+            {slideId === "insight" && <SlideInsight />}
+            {slideId === "pipeline" && <SlidePipeline />}
+            {slideId === "rf" && <SlideRF />}
+            {slideId === "elrs" && <SlideELRS />}
+            {slideId === "4d-model" && <Slide4D />}
+            {slideId === "engineering" && <SlideEngineering />}
+            {slideId === "open-source" && <SlideOpenSource />}
+            {slideId === "roadmap" && <SlideRoadmap />}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* ── Bottom bar: progress + dots ── */}
-      <div className="shrink-0 z-20">
-        {/* 2px progress line */}
-        <div className="w-full h-[2px] bg-[rgba(255,255,255,0.04)]">
-          <motion.div
-            className="h-full bg-[#00d4ff]"
-            animate={{ width: `${((idx + 1) / SLIDES.length) * 100}%` }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-          />
-        </div>
+      {/* Layer 6: Navigation */}
+      <ProgressLine idx={idx} total={SLIDES.length} />
+      <NavDots idx={idx} total={SLIDES.length} onGo={go} />
 
-        {/* Nav row */}
-        <div className="flex items-center justify-between px-6 py-3 bg-[rgba(10,10,15,0.95)] backdrop-blur-lg">
-          <Mono className="text-[#556a7a] tabular-nums w-16">
-            {String(idx + 1).padStart(2, "0")} / {SLIDES.length}
-          </Mono>
-
-          <div className="flex items-center gap-2">
-            {SLIDES.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => go(i)}
-                aria-label={`Go to slide ${i + 1}`}
-                className={`rounded-full transition-all ${
-                  i === idx
-                    ? "w-6 h-1.5 bg-[#00d4ff]"
-                    : i < idx
-                      ? "w-1.5 h-1.5 bg-[#00d4ff]/30 hover:bg-[#00d4ff]/50"
-                      : "w-1.5 h-1.5 bg-white/10 hover:bg-white/20"
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3 w-16 justify-end">
-            <button
-              onClick={() => go(idx - 1)}
-              disabled={idx === 0}
-              aria-label="Previous slide"
-              className="text-[#556a7a] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M10 4L6 8L10 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <button
-              onClick={() => go(idx + 1)}
-              disabled={idx === SLIDES.length - 1}
-              aria-label="Next slide"
-              className="text-[#556a7a] hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-        </div>
+      {/* Slide counter — bottom left corner */}
+      <div className="fixed bottom-[28px] left-6 z-30 font-mono text-[9px] text-[#3a5a6a] tabular-nums tracking-wider">
+        {String(idx + 1).padStart(2, "0")} / {SLIDES.length}
       </div>
-    </div>
+    </>
   );
 }
