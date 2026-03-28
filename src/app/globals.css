@@ -3,9 +3,6 @@
 :root {
   --background: #0a0a0f;
   --foreground: #e8f4ff;
-  --navy: #0d1b2a;
-  --navy2: #0f2035;
-  --panel: #0a1525;
   --cyan: #00d4ff;
   --amber: #ffaa00;
   --threat: #ff4444;
@@ -26,44 +23,7 @@ body {
   overflow: hidden;
 }
 
-/* Grid background overlay */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* Animated dash flow for pipeline viz */
-@keyframes dashFlow {
-  to { stroke-dashoffset: -28; }
-}
-
-/* Scan line effect */
-@keyframes scanLine {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
-/* Pulse ring for radar/sensor nodes */
-@keyframes pulseRing {
-  0% { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(2.5); opacity: 0; }
-}
-
-/* Count up animation for numbers */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Breathing glow */
-@keyframes breathe {
-  0%, 100% { box-shadow: 0 0 20px rgba(0,212,255,0.1); }
-  50% { box-shadow: 0 0 40px rgba(0,212,255,0.25); }
-}
-
 /* Scrollbar */
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #0d1b2a; }
-::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 2px; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
