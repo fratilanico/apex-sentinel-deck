@@ -50,15 +50,15 @@ const DEFENSE_ARCS = [
 
 const SLIDES = [
   { id: "title", label: "SENTINEL" },
-  { id: "problem", label: "PROBLEM" },
-  { id: "insight", label: "INSIGHT" },
-  { id: "pipeline", label: "PIPELINE" },
-  { id: "rf", label: "RF SPECTRUM" },
-  { id: "elrs", label: "ELRS" },
-  { id: "4d-model", label: "4D MODEL" },
-  { id: "engineering", label: "ENGINEERING" },
-  { id: "open-source", label: "OPEN SOURCE" },
-  { id: "roadmap", label: "ROADMAP" },
+  { id: "problem", label: "THE WAR" },
+  { id: "insight", label: "THE PHONES" },
+  { id: "pipeline", label: "HOW" },
+  { id: "rf", label: "RF" },
+  { id: "elrs", label: "DNA" },
+  { id: "4d-model", label: "4D" },
+  { id: "engineering", label: "PROOF" },
+  { id: "live-demo", label: "LIVE" },
+  { id: "roadmap", label: "NEXT" },
 ] as const;
 
 type SlideId = (typeof SLIDES)[number]["id"];
@@ -377,46 +377,31 @@ function ClassificationBar() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SLIDE CONTENT — HUD annotation panels
+   SLIDE CONTENT — EUDIS "Defending Airspace" narrative
    ═══════════════════════════════════════════════════════════ */
 
 function SlideTitle() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <h1 className="font-mono text-[48px] sm:text-[64px] font-bold tracking-[0.15em] text-white uppercase leading-none">
+        <h1 className="font-mono text-[44px] sm:text-[60px] font-bold tracking-[0.12em] text-white uppercase leading-none">
           APEX SENTINEL
         </h1>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-3">
-        <div className="w-[80px] h-[1px] bg-[#00d4ff]" />
+        <div className="w-[80px] h-[2px] bg-[#00d4ff]" />
       </motion.div>
-      <motion.p
-        custom={2}
-        variants={fade}
-        initial="hidden"
-        animate="visible"
-        className="mt-4 text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[540px]"
-      >
-        What if every smartphone could detect a drone?
+      <motion.p custom={2} variants={fade} initial="hidden" animate="visible"
+        className="mt-5 text-[18px] sm:text-[22px] text-[#e8f4ff] leading-relaxed max-w-[580px]">
+        What if every smartphone in Europe could detect a hostile drone?
       </motion.p>
-      <motion.p
-        custom={3}
-        variants={fade}
-        initial="hidden"
-        animate="visible"
-        className="mt-2 text-[14px] text-[#556a7a] leading-relaxed max-w-[540px]"
-      >
-        A distributed civilian sensor network that turns 500 million phones into a defense grid. No new hardware. No trained operators. Just software.
+      <motion.p custom={3} variants={fade} initial="hidden" animate="visible"
+        className="mt-3 text-[15px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+        An open-source distributed sensor network that turns civilian phones into a defense grid across the NATO Eastern Flank.
       </motion.p>
-      <motion.div
-        custom={4}
-        variants={fade}
-        initial="hidden"
-        animate="visible"
-        className="mt-6 font-mono text-[13px] tracking-[0.2em] text-[#00d4ff]/40 uppercase"
-      >
-        HACKATHON 2026
+      <motion.div custom={4} variants={fade} initial="hidden" animate="visible"
+        className="mt-8 font-mono text-[12px] tracking-[0.2em] text-[#00d4ff]/50 uppercase">
+        EUDIS 2026 · DEFENDING AIRSPACE
       </motion.div>
     </div>
   );
