@@ -110,7 +110,7 @@ function useUTCClock() {
    GLOBE BACKGROUND (dynamic import — no SSR)
    ═══════════════════════════════════════════════════════════ */
 
-function GlobeBackground() {
+function GlobeBackground({ onGlobeReady }: { onGlobeReady?: (globe: any) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const globeRef = useRef<ReturnType<typeof Object> | null>(null);
 
@@ -300,6 +300,9 @@ function GlobeBackground() {
       );
       scene.add(stars);
 
+      // Expose globe instance
+      if (onGlobeReady) onGlobeReady(globe);
+
       // Resize
       const onResize = () => {
         globe.width(window.innerWidth).height(window.innerHeight);
@@ -314,6 +317,7 @@ function GlobeBackground() {
     return () => {
       mounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <div ref={containerRef} id="globe-container" />;
@@ -330,16 +334,16 @@ function HudTopBar() {
       {/* Left: system label */}
       <div className="flex items-center gap-4">
         <div>
-          <div className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff] uppercase font-bold">
+          <div className="font-mono text-[13px] tracking-[0.2em] text-[#00d4ff] uppercase font-bold">
             APEX-SENTINEL
           </div>
-          <div className="font-mono text-[9px] tracking-[0.15em] text-[#3a5a6a] uppercase">
+          <div className="font-mono text-[10px] tracking-[0.15em] text-[#3a5a6a] uppercase">
             Counter-UAS Network
           </div>
         </div>
         <div className="flex items-center gap-2 ml-2">
           <span className="status-dot" />
-          <span className="font-mono text-[9px] tracking-wider text-[#0088aa] uppercase">
+          <span className="font-mono text-[11px] tracking-wider text-[#0088aa] uppercase">
             ACTIVE
           </span>
         </div>
@@ -347,10 +351,10 @@ function HudTopBar() {
 
       {/* Right: coords + UTC clock */}
       <div className="text-right">
-        <div className="font-mono text-[10px] text-[#3a5a6a] tracking-wider">
+        <div className="font-mono text-[11px] text-[#3a5a6a] tracking-wider">
           45.9432&deg;N &nbsp; 24.9668&deg;E
         </div>
-        <div className="font-mono text-[11px] text-[#00d4ff] tracking-[0.15em] tabular-nums">
+        <div className="font-mono text-[13px] text-[#00d4ff] tracking-[0.15em] tabular-nums">
           {utc}
         </div>
       </div>
@@ -363,7 +367,7 @@ function ClassificationBar() {
     <div className="fixed bottom-0 left-0 right-0 z-20 pointer-events-none">
       <div className="w-full h-[1px] bg-[rgba(0,212,255,0.15)]" />
       <div className="flex items-center justify-center py-1.5 bg-[rgba(0,0,0,0.85)]">
-        <span className="font-mono text-[8px] tracking-[0.3em] text-[#1a3a4a] uppercase">
+        <span className="font-mono text-[9px] tracking-[0.3em] text-[#1a3a4a] uppercase">
           CLASSIFIED &nbsp;// &nbsp;APEX-SENTINEL COUNTER-UAS NETWORK &nbsp;// &nbsp;NATO
           EASTERN FLANK
         </span>
@@ -380,7 +384,7 @@ function SlideTitle() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <h1 className="font-mono text-[32px] sm:text-[40px] font-bold tracking-[0.15em] text-white uppercase leading-none">
+        <h1 className="font-mono text-[48px] sm:text-[64px] font-bold tracking-[0.15em] text-white uppercase leading-none">
           APEX SENTINEL
         </h1>
       </motion.div>
@@ -392,7 +396,7 @@ function SlideTitle() {
         variants={fade}
         initial="hidden"
         animate="visible"
-        className="mt-4 font-mono text-[11px] tracking-[0.12em] text-[#7a9ab8] uppercase"
+        className="mt-4 font-mono text-[14px] tracking-[0.12em] text-[#7a9ab8] uppercase"
       >
         Distributed Civilian Counter-UAS Sensor Network
       </motion.p>
@@ -401,7 +405,7 @@ function SlideTitle() {
         variants={fade}
         initial="hidden"
         animate="visible"
-        className="mt-4 flex items-center gap-2 font-mono text-[9px] tracking-[0.1em] text-[#3a5a6a]"
+        className="mt-4 flex items-center gap-2 font-mono text-[12px] tracking-[0.1em] text-[#3a5a6a]"
       >
         {["Acoustic", "RF", "RTL-SDR", "TDoA", "EKF", "LSTM"].map((t, i) => (
           <span key={t} className="flex items-center gap-2">
@@ -415,7 +419,7 @@ function SlideTitle() {
         variants={fade}
         initial="hidden"
         animate="visible"
-        className="mt-6 font-mono text-[10px] tracking-[0.2em] text-[#00d4ff]/40 uppercase"
+        className="mt-6 font-mono text-[13px] tracking-[0.2em] text-[#00d4ff]/40 uppercase"
       >
         HACKATHON 2026
       </motion.div>
@@ -427,10 +431,10 @@ function SlideProblem() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#ff4444]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#ff4444]/60 uppercase">
           THREAT ASSESSMENT
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           COST ASYMMETRY
         </h2>
       </motion.div>
@@ -442,19 +446,19 @@ function SlideProblem() {
         className="mt-5 space-y-2"
       >
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[22px] font-bold text-[#ff4444]">
+          <span className="font-mono text-[32px] font-bold text-[#ff4444]">
             $<CountUp target={400} duration={800} />
           </span>
-          <span className="font-mono text-[10px] text-[#7a9ab8] tracking-wider">
+          <span className="font-mono text-[13px] text-[#7a9ab8] tracking-wider">
             FPV COMBAT DRONE
           </span>
         </div>
-        <div className="font-mono text-[9px] text-[#3a5a6a] tracking-wider">VS</div>
+        <div className="font-mono text-[11px] text-[#3a5a6a] tracking-wider">VS</div>
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[22px] font-bold text-[#ffaa00]">
+          <span className="font-mono text-[32px] font-bold text-[#ffaa00]">
             $<CountUp target={2} duration={600} suffix="M" />
           </span>
-          <span className="font-mono text-[10px] text-[#7a9ab8] tracking-wider">
+          <span className="font-mono text-[13px] text-[#7a9ab8] tracking-wider">
             C-UAS SYSTEM
           </span>
         </div>
@@ -466,7 +470,7 @@ function SlideProblem() {
         animate="visible"
         className="mt-5"
       >
-        <div className="font-mono text-[10px] text-[#556a7a] leading-relaxed max-w-[420px]">
+        <div className="font-mono text-[13px] text-[#556a7a] leading-relaxed max-w-[520px]">
           500,000+ attacks since 2022. Defenders outspent 5,000:1.
           <br />
           Current C-UAS: fixed position, single-point, trained operators.
@@ -487,10 +491,10 @@ function SlideInsight() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
           STRATEGIC ADVANTAGE
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           500M SENSORS DEPLOYED
         </h2>
       </motion.div>
@@ -499,7 +503,7 @@ function SlideInsight() {
         variants={fade}
         initial="hidden"
         animate="visible"
-        className="mt-3 font-mono text-[10px] text-[#556a7a] leading-relaxed max-w-[420px]"
+        className="mt-3 font-mono text-[13px] text-[#556a7a] leading-relaxed max-w-[520px]"
       >
         Every smartphone has the hardware for drone detection.
         No new infrastructure. Deploy tomorrow.
@@ -514,7 +518,7 @@ function SlideInsight() {
         {caps.map((c) => (
           <div
             key={c.label}
-            className="px-3 py-1.5 glass font-mono text-[9px] tracking-wider"
+            className="px-3 py-1.5 glass font-mono text-[12px] tracking-wider"
           >
             <span className="text-[#00d4ff]">{c.label}</span>
             <span className="text-[#3a5a6a] ml-2">{c.spec}</span>
@@ -535,10 +539,10 @@ function SlidePipeline() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
           SYSTEM ARCHITECTURE
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           DETECTION PIPELINE
         </h2>
       </motion.div>
@@ -552,13 +556,13 @@ function SlidePipeline() {
         {steps.map((s, i) => (
           <div key={s.label} className="flex items-center gap-1">
             <div
-              className="px-3 py-1.5 glass font-mono text-[10px] font-bold tracking-wider"
+              className="px-3 py-1.5 glass font-mono text-[12px] font-bold tracking-wider"
               style={{ color: s.color, borderColor: `${s.color}30` }}
             >
               {s.label}
             </div>
             {i < steps.length - 1 && (
-              <span className="font-mono text-[10px] text-[#3a5a6a]">&rarr;</span>
+              <span className="font-mono text-[12px] text-[#3a5a6a]">&rarr;</span>
             )}
           </div>
         ))}
@@ -570,7 +574,7 @@ function SlidePipeline() {
         animate="visible"
         className="mt-4"
       >
-        <div className="font-mono text-[10px] text-[#556a7a]">
+        <div className="font-mono text-[13px] text-[#556a7a]">
           &lt;500ms end-to-end &middot; Multi-sensor fusion &middot; ATAK integration
         </div>
       </motion.div>
@@ -582,10 +586,10 @@ function SlideRF() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
           PASSIVE MONITORING
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           RF SPECTRUM ANALYSIS
         </h2>
       </motion.div>
@@ -603,10 +607,10 @@ function SlideRF() {
           { k: "HARDWARE", v: "RTL-SDR v3/v4 ($30)" },
         ].map((r) => (
           <div key={r.k} className="flex items-baseline gap-3">
-            <span className="font-mono text-[9px] text-[#3a5a6a] tracking-wider w-[70px] shrink-0 uppercase">
+            <span className="font-mono text-[11px] text-[#3a5a6a] tracking-wider w-[80px] shrink-0 uppercase">
               {r.k}
             </span>
-            <span className="font-mono text-[10px] text-[#7a9ab8]">{r.v}</span>
+            <span className="font-mono text-[13px] text-[#7a9ab8]">{r.v}</span>
           </div>
         ))}
       </motion.div>
@@ -615,7 +619,7 @@ function SlideRF() {
         variants={fade}
         initial="hidden"
         animate="visible"
-        className="mt-4 font-mono text-[10px] text-[#556a7a] max-w-[420px]"
+        className="mt-4 font-mono text-[13px] text-[#556a7a] max-w-[520px]"
       >
         Waterfall spectral decomposition detects drone control before visual or acoustic contact.
       </motion.div>
@@ -633,10 +637,10 @@ function SlideELRS() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
           RF INTELLIGENCE
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           DIGITAL DNA EXTRACTION
         </h2>
       </motion.div>
@@ -649,10 +653,10 @@ function SlideELRS() {
       >
         {caps.map((c) => (
           <div key={c.code} className="flex items-baseline gap-3">
-            <span className="font-mono text-[10px] font-bold text-[#00d4ff] w-[130px] shrink-0 tracking-wider">
+            <span className="font-mono text-[13px] font-bold text-[#00d4ff] w-[150px] shrink-0 tracking-wider">
               {c.code}
             </span>
-            <span className="font-mono text-[10px] text-[#556a7a]">{c.desc}</span>
+            <span className="font-mono text-[13px] text-[#556a7a]">{c.desc}</span>
           </div>
         ))}
       </motion.div>
@@ -669,8 +673,8 @@ function SlideELRS() {
           { v: "4", l: "protocols" },
         ].map((s) => (
           <div key={s.l} className="glass px-3 py-1.5">
-            <span className="font-mono text-[14px] font-bold text-white">{s.v}</span>
-            <span className="font-mono text-[8px] text-[#3a5a6a] ml-1.5 uppercase tracking-wider">
+            <span className="font-mono text-[18px] font-bold text-white">{s.v}</span>
+            <span className="font-mono text-[10px] text-[#3a5a6a] ml-1.5 uppercase tracking-wider">
               {s.l}
             </span>
           </div>
@@ -689,10 +693,10 @@ function Slide4D() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
           SENSOR FUSION
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           4D NODE MODEL
         </h2>
       </motion.div>
@@ -703,7 +707,7 @@ function Slide4D() {
         animate="visible"
         className="mt-3"
       >
-        <code className="font-mono text-[11px] text-[#00d4ff]">
+        <code className="font-mono text-[14px] text-[#00d4ff]">
           Node(lat, lon, alt, timePrecision&mu;s)
         </code>
       </motion.div>
@@ -717,16 +721,16 @@ function Slide4D() {
         {tiers.map((t) => (
           <div key={t.tier} className="flex items-baseline gap-3">
             <span
-              className="font-mono text-[10px] font-bold w-[24px] shrink-0"
+              className="font-mono text-[13px] font-bold w-[28px] shrink-0"
               style={{ color: t.color }}
             >
               {t.tier}
             </span>
-            <span className="font-mono text-[10px] text-white w-[110px] shrink-0">{t.name}</span>
-            <span className="font-mono text-[9px] text-[#556a7a] w-[100px] shrink-0">
+            <span className="font-mono text-[13px] text-white w-[130px] shrink-0">{t.name}</span>
+            <span className="font-mono text-[11px] text-[#556a7a] w-[110px] shrink-0">
               {t.clock}
             </span>
-            <span className="font-mono text-[9px] text-[#3a5a6a]">{t.acc}</span>
+            <span className="font-mono text-[11px] text-[#3a5a6a]">{t.acc}</span>
           </div>
         ))}
       </motion.div>
@@ -735,7 +739,7 @@ function Slide4D() {
         variants={fade}
         initial="hidden"
         animate="visible"
-        className="mt-4 font-mono text-[10px] text-[#3a5a6a] max-w-[420px]"
+        className="mt-4 font-mono text-[13px] text-[#3a5a6a] max-w-[520px]"
       >
         TDoA triangulation weights each node by clock quality.
       </motion.div>
@@ -747,10 +751,10 @@ function SlideEngineering() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00e676]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00e676]/60 uppercase">
           VERIFICATION
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           ENGINEERING DEPTH
         </h2>
       </motion.div>
@@ -767,10 +771,10 @@ function SlideEngineering() {
           { v: 0, l: "FAILING", s: "" },
         ].map((m) => (
           <div key={m.l} className="glass px-3 py-2">
-            <div className="font-mono text-[18px] font-bold text-white tabular-nums">
+            <div className="font-mono text-[24px] font-bold text-white tabular-nums">
               <CountUp target={m.v} duration={1500} suffix={m.s} />
             </div>
-            <div className="font-mono text-[8px] text-[#3a5a6a] tracking-[0.15em] uppercase">
+            <div className="font-mono text-[10px] text-[#3a5a6a] tracking-[0.15em] uppercase">
               {m.l}
             </div>
           </div>
@@ -790,8 +794,8 @@ function SlideEngineering() {
           "Full pyramid: unit → integration → E2E",
         ].map((line) => (
           <div key={line} className="flex items-center gap-2">
-            <span className="font-mono text-[8px] text-[#00d4ff]">&gt;</span>
-            <span className="font-mono text-[10px] text-[#556a7a]">{line}</span>
+            <span className="font-mono text-[10px] text-[#00d4ff]">&gt;</span>
+            <span className="font-mono text-[13px] text-[#556a7a]">{line}</span>
           </div>
         ))}
       </motion.div>
@@ -810,7 +814,7 @@ function SlideEngineering() {
               title={`W${i + 1}`}
             />
           ))}
-          <span className="ml-2 font-mono text-[8px] text-[#3a5a6a]">21/21 COMPLETE</span>
+          <span className="ml-2 font-mono text-[10px] text-[#3a5a6a]">21/21 COMPLETE</span>
         </div>
       </motion.div>
     </div>
@@ -821,10 +825,10 @@ function SlideOpenSource() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00e676]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00e676]/60 uppercase">
           PUBLIC REPOSITORY
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           OPEN SOURCE
         </h2>
       </motion.div>
@@ -836,20 +840,20 @@ function SlideOpenSource() {
         className="mt-4 space-y-3"
       >
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[9px] text-[#3a5a6a] w-[50px] shrink-0">REPO</span>
-          <span className="font-mono text-[11px] text-[#00d4ff]">
+          <span className="font-mono text-[11px] text-[#3a5a6a] w-[60px] shrink-0">REPO</span>
+          <span className="font-mono text-[13px] text-[#00d4ff]">
             github.com/fratilanico/apex-sentinel
           </span>
         </div>
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[9px] text-[#3a5a6a] w-[50px] shrink-0">DEMO</span>
-          <span className="font-mono text-[11px] text-[#00e676]">
+          <span className="font-mono text-[11px] text-[#3a5a6a] w-[60px] shrink-0">DEMO</span>
+          <span className="font-mono text-[13px] text-[#00e676]">
             apex-sentinel-demo.vercel.app
           </span>
         </div>
         <div className="flex items-baseline gap-3">
-          <span className="font-mono text-[9px] text-[#3a5a6a] w-[50px] shrink-0">LICENSE</span>
-          <span className="font-mono text-[11px] text-[#7a9ab8]">MIT</span>
+          <span className="font-mono text-[11px] text-[#3a5a6a] w-[60px] shrink-0">LICENSE</span>
+          <span className="font-mono text-[13px] text-[#7a9ab8]">MIT</span>
         </div>
       </motion.div>
       <motion.div
@@ -862,8 +866,8 @@ function SlideOpenSource() {
         {["34+ TypeScript modules", "Full test pyramid", "Production-grade sensor fusion library"].map(
           (line) => (
             <div key={line} className="flex items-center gap-2">
-              <span className="font-mono text-[8px] text-[#00d4ff]">&mdash;</span>
-              <span className="font-mono text-[10px] text-[#556a7a]">{line}</span>
+              <span className="font-mono text-[10px] text-[#00d4ff]">&mdash;</span>
+              <span className="font-mono text-[13px] text-[#556a7a]">{line}</span>
             </div>
           )
         )}
@@ -881,10 +885,10 @@ function SlideRoadmap() {
   return (
     <div className="flex flex-col justify-end h-full pb-20">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <span className="font-mono text-[9px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
+        <span className="font-mono text-[11px] tracking-[0.2em] text-[#00d4ff]/60 uppercase">
           DEPLOYMENT TIMELINE
         </span>
-        <h2 className="mt-2 font-mono text-[20px] font-bold tracking-[0.12em] text-white uppercase">
+        <h2 className="mt-2 font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.12em] text-white uppercase">
           ROADMAP
         </h2>
       </motion.div>
@@ -898,12 +902,12 @@ function SlideRoadmap() {
         {phases.map((p) => (
           <div key={p.phase} className="flex items-baseline gap-3">
             <span
-              className="font-mono text-[10px] font-bold w-[55px] shrink-0 tracking-wider"
+              className="font-mono text-[13px] font-bold w-[65px] shrink-0 tracking-wider"
               style={{ color: p.color }}
             >
               {p.phase}
             </span>
-            <span className="font-mono text-[10px] text-[#556a7a]">{p.desc}</span>
+            <span className="font-mono text-[13px] text-[#556a7a]">{p.desc}</span>
           </div>
         ))}
       </motion.div>
@@ -914,10 +918,10 @@ function SlideRoadmap() {
         animate="visible"
         className="mt-6 space-y-1"
       >
-        <div className="font-mono text-[10px] text-[#7a9ab8]">
+        <div className="font-mono text-[13px] text-[#7a9ab8]">
           github.com/fratilanico/apex-sentinel
         </div>
-        <div className="font-mono text-[9px] text-[#3a5a6a]">nico@apexos.dev</div>
+        <div className="font-mono text-[11px] text-[#3a5a6a]">nico@apexos.dev</div>
       </motion.div>
     </div>
   );
@@ -975,12 +979,12 @@ function RightPanel({ slideId }: { slideId: SlideId }) {
       transition={{ duration: 0.3, delay: 0.2 }}
       className="fixed top-[72px] right-6 z-20 pointer-events-none"
     >
-      <div className="glass px-4 py-3 w-[180px]">
-        <div className="font-mono text-[8px] tracking-[0.2em] text-[#00d4ff]/60 uppercase mb-2">
+      <div className="glass px-4 py-3 w-[200px]">
+        <div className="font-mono text-[10px] tracking-[0.2em] text-[#00d4ff]/60 uppercase mb-2">
           {panel.title}
         </div>
         {panel.items.map((item) => (
-          <div key={item} className="font-mono text-[9px] text-[#556a7a] leading-[1.7]">
+          <div key={item} className="font-mono text-[11px] text-[#556a7a] leading-[1.7]">
             {item}
           </div>
         ))}
@@ -1033,11 +1037,291 @@ function ProgressLine({ idx, total }: { idx: number; total: number }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   DRONE INCURSION SIMULATION
+   ═══════════════════════════════════════════════════════════ */
+
+interface SimDrone {
+  id: string;
+  arcIdx: number;
+  progress: number; // 0 to 1
+  phase: "inbound" | "detected" | "tracked" | "neutralized";
+  lat: number;
+  lng: number;
+  spawnedAt: number;
+}
+
+interface AlertEvent {
+  id: string;
+  time: string;
+  text: string;
+  color: string; // tailwind-safe hex
+  ts: number;
+}
+
+const DRONE_PROTOCOLS = ["ELRS 2.4GHz", "DJI O3", "Crossfire 868MHz", "Analog 5.8GHz"];
+const DRONE_SECTORS = ["NORTH", "CENTRAL", "BLACK SEA", "DEEP"];
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * Math.min(1, Math.max(0, t));
+}
+
+function utcStamp() {
+  const d = new Date();
+  return (
+    d.getUTCHours().toString().padStart(2, "0") +
+    ":" +
+    d.getUTCMinutes().toString().padStart(2, "0") +
+    ":" +
+    d.getUTCSeconds().toString().padStart(2, "0")
+  );
+}
+
+let droneCounter = 0;
+
+function DroneSimulation({
+  globe,
+  onAlert,
+}: {
+  globe: any;
+  onAlert: (evt: AlertEvent) => void;
+}) {
+  const dronesRef = useRef<SimDrone[]>([]);
+  const firedDetectRef = useRef<Set<string>>(new Set());
+  const firedTrackRef = useRef<Set<string>>(new Set());
+  const firedNeutRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!globe) return;
+
+    // Spawn a new drone every 8 seconds
+    const spawnInterval = setInterval(() => {
+      const arcIdx = Math.floor(Math.random() * THREAT_ARCS.length);
+      const arc = THREAT_ARCS[arcIdx];
+      droneCounter++;
+      const id = `UAS-${String(droneCounter).padStart(3, "0")}`;
+      const drone: SimDrone = {
+        id,
+        arcIdx,
+        progress: 0,
+        phase: "inbound",
+        lat: arc.startLat,
+        lng: arc.startLng,
+        spawnedAt: Date.now(),
+      };
+      dronesRef.current = [...dronesRef.current, drone];
+
+      const proto = DRONE_PROTOCOLS[Math.floor(Math.random() * DRONE_PROTOCOLS.length)];
+      onAlert({
+        id: `${id}-spawn`,
+        time: utcStamp(),
+        text: `${id} INBOUND — SECTOR ${DRONE_SECTORS[arcIdx]}`,
+        color: "#ff4444",
+        ts: Date.now(),
+      });
+
+      // Pre-schedule protocol ID alert
+      setTimeout(() => {
+        onAlert({
+          id: `${id}-proto`,
+          time: utcStamp(),
+          text: `CLASSIFIED: FPV RACING — ${proto}`,
+          color: "#ffaa00",
+          ts: Date.now(),
+        });
+      }, 1500);
+    }, 8000);
+
+    // Advance drones at 100ms tick
+    const tickInterval = setInterval(() => {
+      const now = Date.now();
+      const updated: SimDrone[] = [];
+
+      for (const drone of dronesRef.current) {
+        const age = now - drone.spawnedAt;
+        const arc = THREAT_ARCS[drone.arcIdx];
+
+        // Total journey: 6s inbound, detect at ~60%, track at ~75%, neutralize at ~90%
+        const progress = Math.min(1, age / 6000);
+        const lat = lerp(arc.startLat, arc.endLat, progress);
+        const lng = lerp(arc.startLng, arc.endLng, progress);
+
+        let phase = drone.phase;
+
+        if (progress >= 0.6 && phase === "inbound") {
+          phase = "detected";
+          if (!firedDetectRef.current.has(drone.id)) {
+            firedDetectRef.current.add(drone.id);
+            onAlert({
+              id: `${drone.id}-detect`,
+              time: utcStamp(),
+              text: `${drone.id} DETECTED — TRIANGULATING — 3 NODES — ±14m CEP`,
+              color: "#00d4ff",
+              ts: Date.now(),
+            });
+          }
+        }
+
+        if (progress >= 0.75 && (phase === "detected" || phase === "inbound")) {
+          phase = "tracked";
+          if (!firedTrackRef.current.has(drone.id)) {
+            firedTrackRef.current.add(drone.id);
+            const brg = String(Math.floor(Math.random() * 360)).padStart(3, "0");
+            onAlert({
+              id: `${drone.id}-track`,
+              time: utcStamp(),
+              text: `TRACK ESTABLISHED — BRG ${brg}° — TERMINAL`,
+              color: "#ffaa00",
+              ts: Date.now(),
+            });
+          }
+        }
+
+        if (progress >= 0.9 && phase !== "neutralized") {
+          phase = "neutralized";
+          if (!firedNeutRef.current.has(drone.id)) {
+            firedNeutRef.current.add(drone.id);
+            onAlert({
+              id: `${drone.id}-neut`,
+              time: utcStamp(),
+              text: `${drone.id} NEUTRALIZED — TRACK CLOSED`,
+              color: "#00e676",
+              ts: Date.now(),
+            });
+          }
+        }
+
+        // Remove fully completed drones (after 8s total)
+        if (age < 8000) {
+          updated.push({ ...drone, progress, lat, lng, phase });
+        } else {
+          // cleanup fired refs
+          firedDetectRef.current.delete(drone.id);
+          firedTrackRef.current.delete(drone.id);
+          firedNeutRef.current.delete(drone.id);
+        }
+      }
+
+      dronesRef.current = updated;
+
+      // Update globe htmlElementsData
+      const htmlData = updated.map((d) => ({
+        lat: d.lat,
+        lng: d.lng,
+        id: d.id,
+        phase: d.phase,
+      }));
+
+      try {
+        globe
+          .htmlElementsData(htmlData)
+          .htmlLat((d: any) => d.lat)
+          .htmlLng((d: any) => d.lng)
+          .htmlAltitude(0.03)
+          .htmlElement((d: any) => {
+            const existing = document.getElementById(`drone-${d.id}`);
+            if (existing) return existing;
+
+            const el = document.createElement("div");
+            el.id = `drone-${d.id}`;
+            el.style.width = "10px";
+            el.style.height = "10px";
+            el.style.borderRadius = "50%";
+            el.style.pointerEvents = "none";
+            el.style.transition = "background 0.3s, box-shadow 0.3s, opacity 0.5s";
+
+            const phaseColor: Record<string, string> = {
+              inbound: "#ff4444",
+              detected: "#00d4ff",
+              tracked: "#ffaa00",
+              neutralized: "#00e676",
+            };
+            const c = phaseColor[d.phase] || "#ff4444";
+            el.style.background = c;
+            el.style.boxShadow = `0 0 8px ${c}, 0 0 16px ${c}80`;
+            if (d.phase === "neutralized") el.style.opacity = "0.4";
+            return el;
+          });
+      } catch {
+        // globe may not be ready
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(spawnInterval);
+      clearInterval(tickInterval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [globe]);
+
+  return null; // Simulation is side-effect only
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ALERT FEED
+   ═══════════════════════════════════════════════════════════ */
+
+function AlertFeed({ events }: { events: AlertEvent[] }) {
+  const visible = events.slice(0, 8);
+
+  return (
+    <div className="fixed top-[72px] right-6 z-20 pointer-events-none w-[280px]">
+      <div className="glass px-4 py-3">
+        <div className="font-mono text-[12px] tracking-[0.2em] text-[#00d4ff]/60 uppercase mb-3">
+          THREAT FEED
+        </div>
+        <div className="space-y-1.5">
+          <AnimatePresence initial={false}>
+            {visible.map((evt) => (
+              <motion.div
+                key={evt.id}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex gap-2 items-start"
+              >
+                <span className="font-mono text-[11px] text-[#3a5a6a] tabular-nums shrink-0">
+                  [{evt.time}]
+                </span>
+                <span
+                  className="font-mono text-[12px] leading-snug"
+                  style={{ color: evt.color }}
+                >
+                  {evt.text}
+                </span>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          {visible.length === 0 && (
+            <div className="font-mono text-[11px] text-[#3a5a6a] animate-pulse">
+              MONITORING...
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN PRESENTATION
    ═══════════════════════════════════════════════════════════ */
 
 export default function Presentation() {
   const [idx, setIdx] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const globeInstanceRef = useRef<any>(null);
+  const [globeReady, setGlobeReady] = useState(false);
+  const [alertEvents, setAlertEvents] = useState<AlertEvent[]>([]);
+
+  const handleGlobeReady = useCallback((g: any) => {
+    globeInstanceRef.current = g;
+    setGlobeReady(true);
+  }, []);
+
+  const handleAlert = useCallback((evt: AlertEvent) => {
+    setAlertEvents((prev) => [evt, ...prev].slice(0, 20));
+  }, []);
 
   const go = useCallback((to: number) => {
     if (to < 0 || to >= SLIDES.length) return;
@@ -1064,7 +1348,12 @@ export default function Presentation() {
   return (
     <>
       {/* Layer 1: Globe */}
-      <GlobeBackground />
+      <GlobeBackground onGlobeReady={handleGlobeReady} />
+
+      {/* Drone simulation (side-effect component) */}
+      {globeReady && (
+        <DroneSimulation globe={globeInstanceRef.current} onAlert={handleAlert} />
+      )}
 
       {/* Layer 2: Vignette */}
       <div className="vignette" />
@@ -1073,13 +1362,11 @@ export default function Presentation() {
       <HudTopBar />
       <ClassificationBar />
 
-      {/* Layer 4: Right panel (contextual) */}
-      <AnimatePresence mode="wait">
-        <RightPanel slideId={slideId} />
-      </AnimatePresence>
+      {/* Layer 4: Alert feed (replaces right panel) */}
+      <AlertFeed events={alertEvents} />
 
       {/* Layer 5: Slide content — bottom left */}
-      <div className="fixed bottom-[40px] left-6 z-20 w-[520px] max-w-[calc(100vw-48px)] h-[calc(100vh-120px)] pointer-events-none">
+      <div className="fixed bottom-[40px] left-6 z-20 w-[640px] max-w-[calc(100vw-48px)] h-[calc(100vh-120px)] pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
             key={slideId}
@@ -1109,7 +1396,7 @@ export default function Presentation() {
       <NavDots idx={idx} total={SLIDES.length} onGo={go} />
 
       {/* Slide counter — bottom left corner */}
-      <div className="fixed bottom-[28px] left-6 z-30 font-mono text-[9px] text-[#3a5a6a] tabular-nums tracking-wider">
+      <div className="fixed bottom-[28px] left-6 z-30 font-mono text-[11px] text-[#3a5a6a] tabular-nums tracking-wider">
         {String(idx + 1).padStart(2, "0")} / {SLIDES.length}
       </div>
     </>
