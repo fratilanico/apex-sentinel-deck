@@ -26,19 +26,19 @@ type SlideId = (typeof SLIDES)[number]["id"];
    ANIMATION VARIANTS — defined OUTSIDE components (stable refs)
    ═══════════════════════════════════════════════════════════ */
 const slideVariants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 80 : -80, opacity: 0 }),
+  enter: (dir: number) => ({ x: dir > 0 ? 30 : -30, opacity: 0 }),
   center: { x: 0, opacity: 1 },
-  exit: (dir: number) => ({ x: dir > 0 ? -80 : 80, opacity: 0 }),
+  exit: (dir: number) => ({ x: dir > 0 ? -30 : 30, opacity: 0 }),
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.1,
-      duration: 0.5,
+      delay: i * 0.08,
+      duration: 0.35,
       ease: "easeOut" as const,
     },
   }),
@@ -46,26 +46,26 @@ const fadeUp = {
 
 const staggerContainer = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.05 } },
 };
 
 const staggerItem = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: "easeOut" as const },
+    transition: { duration: 0.3, ease: "easeOut" as const },
   },
 };
 
 const scaleIn = {
-  hidden: { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, scale: 0.95 },
   visible: (i: number) => ({
     opacity: 1,
     scale: 1,
     transition: {
-      delay: i * 0.12,
-      duration: 0.5,
+      delay: i * 0.08,
+      duration: 0.35,
       ease: "easeOut" as const,
     },
   }),
@@ -74,11 +74,11 @@ const scaleIn = {
 const breatheGlow = {
   animate: {
     boxShadow: [
-      "0 0 20px rgba(0,212,255,0.1)",
-      "0 0 40px rgba(0,212,255,0.25)",
-      "0 0 20px rgba(0,212,255,0.1)",
+      "0 0 15px rgba(0,212,255,0.05)",
+      "0 0 25px rgba(0,212,255,0.12)",
+      "0 0 15px rgba(0,212,255,0.05)",
     ],
-    transition: { duration: 3, repeat: Infinity, ease: "easeInOut" as const },
+    transition: { duration: 4, repeat: Infinity, ease: "easeInOut" as const },
   },
 };
 
@@ -113,7 +113,7 @@ function SlideBg({
   overlay?: string;
 }) {
   return (
-    <div className="absolute inset-0 -z-10">
+    <div className="absolute inset-0 z-0">
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${src})` }}
@@ -146,18 +146,18 @@ function Badge({ children, color = "cyan" }: { children: React.ReactNode; color?
 function PulseRing() {
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-      {[0, 1, 2].map((i) => (
+      {[0, 1].map((i) => (
         <motion.div
           key={i}
-          className="absolute w-32 h-32 rounded-full border border-[#00d4ff]/30"
+          className="absolute w-24 h-24 rounded-full border border-[#00d4ff]/15"
           animate={{
-            scale: [1, 2.5],
-            opacity: [0.5, 0],
+            scale: [1, 2],
+            opacity: [0.3, 0],
           }}
           transition={{
-            duration: 3,
+            duration: 4,
             repeat: Infinity,
-            delay: i * 1,
+            delay: i * 2,
             ease: "easeOut" as const,
           }}
         />
@@ -171,18 +171,18 @@ function PulseRing() {
    ═══════════════════════════════════════════════════════════ */
 function SlideTitle() {
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-120px)] text-center">
-      <SlideBg src="/images/slide-01-hero.jpg" overlay="rgba(10,10,15,0.75)" />
+    <div className="relative flex flex-col items-center justify-center min-h-[calc(100vh-120px)] text-center z-10">
+      <SlideBg src="/images/slide-01-hero.jpg" overlay="rgba(10,10,15,0.55)" />
       <PulseRing />
 
       {/* Shield icon */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.5 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" as const }}
+        transition={{ duration: 0.5, ease: "easeOut" as const }}
         className="relative mb-8"
       >
-        <svg width="80" height="90" viewBox="0 0 80 90" fill="none" className="drop-shadow-[0_0_30px_rgba(0,212,255,0.4)]">
+        <svg width="80" height="90" viewBox="0 0 80 90" fill="none" className="drop-shadow-[0_0_20px_rgba(0,212,255,0.25)]">
           <path
             d="M40 5L8 20V45C8 65 22 82 40 87C58 82 72 65 72 45V20L40 5Z"
             stroke="#00d4ff"
@@ -201,11 +201,11 @@ function SlideTitle() {
       </motion.div>
 
       <motion.h1
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6, ease: "easeOut" as const }}
+        transition={{ delay: 0.15, duration: 0.4, ease: "easeOut" as const }}
         className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-[8px] uppercase text-white mb-4"
-        style={{ textShadow: "0 0 60px rgba(0,212,255,0.3)" }}
+        style={{ textShadow: "0 0 40px rgba(0,212,255,0.15)" }}
       >
         APEX SENTINEL
       </motion.h1>
@@ -256,8 +256,8 @@ function SlideThreat() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
-      <SlideBg src="/images/slide-02-threat.jpg" overlay="rgba(10,10,15,0.85)" />
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
+      <SlideBg src="/images/slide-02-threat.jpg" overlay="rgba(10,10,15,0.6)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
         <Badge color="threat">Critical Intelligence</Badge>
@@ -282,7 +282,7 @@ function SlideThreat() {
         {stats.map((s) => (
           <motion.div key={s.label} variants={staggerItem}>
             <GlassCard className="text-center">
-              <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#ff4444] mb-2">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-black text-[#ff4444] mb-2 whitespace-nowrap">
                 <CountUp target={s.value} duration={s.duration} prefix={s.prefix} suffix={s.suffix} />
               </div>
               <div className="text-xs font-mono text-[#7a9ab8] uppercase tracking-wider">
@@ -357,8 +357,8 @@ function SlideGap() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
-      <SlideBg src="/images/slide-03-gap.jpg" overlay="rgba(10,10,15,0.85)" />
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
+      <SlideBg src="/images/slide-03-gap.jpg" overlay="rgba(10,10,15,0.6)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
         <Badge color="amber">Market Analysis</Badge>
@@ -480,8 +480,8 @@ function SlideSolution() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
-      <SlideBg src="/images/slide-04-solution.jpg" overlay="rgba(10,10,15,0.85)" />
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
+      <SlideBg src="/images/slide-04-solution.jpg" overlay="rgba(10,10,15,0.6)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
         <Badge color="safe">Core Capability</Badge>
@@ -560,7 +560,7 @@ function SlideRF() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
       <SlideBg src="/images/slide-05-rf.jpg" overlay="rgba(10,10,15,0.87)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
@@ -692,7 +692,7 @@ function SlideELRS() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
       <SlideBg src="/images/slide-06-elrs.jpg" overlay="rgba(10,10,15,0.87)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
@@ -799,7 +799,7 @@ function SlideArchitecture() {
   const pipeline = ["TDoA", "EKF", "LSTM", "CoT"];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
       <SlideBg src="/images/slide-07-arch.jpg" overlay="rgba(10,10,15,0.87)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
@@ -919,8 +919,8 @@ function SlideTests() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center">
-      <SlideBg src="/images/slide-08-tests.jpg" overlay="rgba(10,10,15,0.85)" />
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center z-10">
+      <SlideBg src="/images/slide-08-tests.jpg" overlay="rgba(10,10,15,0.6)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-6">
         <Badge color="safe">Quality Assurance</Badge>
@@ -1032,7 +1032,7 @@ function SlideJourney() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center">
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col justify-center z-10">
       <SlideBg src="/images/slide-09-timeline.jpg" overlay="rgba(10,10,15,0.87)" />
 
       <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mb-2">
@@ -1145,7 +1145,7 @@ function SlideCTA() {
   ];
 
   return (
-    <div className="relative min-h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center">
+    <div className="relative min-h-[calc(100vh-120px)] flex flex-col items-center justify-center text-center z-10">
       <SlideBg src="/images/slide-10-cta.jpg" overlay="rgba(10,10,15,0.78)" />
 
       {/* Breathing shield */}
