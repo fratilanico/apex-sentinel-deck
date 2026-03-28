@@ -55,6 +55,7 @@ const SLIDES = [
   { id: "demo", label: "LIVE" },
   { id: "tech", label: "TECH" },
   { id: "stack", label: "STACK" },
+  { id: "team", label: "TEAM" },
   { id: "running", label: "DEMO" },
   { id: "close", label: "NEXT" },
 ] as const;
@@ -431,6 +432,21 @@ function SlideThreat() {
           Romania is on the front line. The threat doesn&apos;t stop at the border.
         </p>
       </motion.div>
+      <motion.div custom={4} variants={fade} initial="hidden" animate="visible" className="mt-6 flex flex-wrap gap-3">
+        {[
+          { label: "Shahed-136", detail: "loitering munition" },
+          { label: "Lancet-3", detail: "kamikaze" },
+          { label: "FPV racing", detail: "grenade drop" },
+          { label: "Orlan-10", detail: "ISR recon" },
+          { label: "Gerbera", detail: "piston kamikaze" },
+          { label: "Mavic-class", detail: "commercial" },
+        ].map((d) => (
+          <div key={d.label} className="px-3 py-1.5 glass font-mono text-[12px]">
+            <span className="text-[#ff4444]/80">{d.label}</span>
+            <span className="text-[#3a5a6a] ml-2">{d.detail}</span>
+          </div>
+        ))}
+      </motion.div>
     </div>
   );
 }
@@ -458,8 +474,22 @@ function SlidePhones() {
           display in under half a second.
         </p>
       </motion.div>
-      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="font-mono text-[14px] text-[#00d4ff]/50">
+      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-6 flex flex-wrap gap-3">
+        {[
+          { sensor: "MICROPHONE", spec: "acoustic detection" },
+          { sensor: "WIFI 2.4GHz", spec: "passive RF sensing" },
+          { sensor: "GPS", spec: "position + timing" },
+          { sensor: "NPU", spec: "on-device ML" },
+          { sensor: "4G UPLINK", spec: "mesh relay" },
+        ].map((s) => (
+          <div key={s.sensor} className="px-3 py-1.5 glass font-mono text-[12px]">
+            <span className="text-[#00d4ff]">{s.sensor}</span>
+            <span className="text-[#3a5a6a] ml-2">{s.spec}</span>
+          </div>
+        ))}
+      </motion.div>
+      <motion.div custom={4} variants={fade} initial="hidden" animate="visible" className="mt-4">
+        <p className="font-mono text-[13px] text-[#00d4ff]/40">
           No new infrastructure. No specialized equipment. No trained operators.
         </p>
       </motion.div>
@@ -524,6 +554,19 @@ function SlideTech() {
           Node(lat, lon, alt, timePrecision&mu;s)
         </code>
       </motion.div>
+      <motion.div custom={4} variants={fade} initial="hidden" animate="visible" className="mt-5 flex items-center gap-3">
+        {["DETECT", "CLASSIFY", "TRACK", "PREDICT", "ALERT"].map((s, i) => (
+          <div key={s} className="flex items-center gap-3">
+            <span className="font-mono text-[13px] font-bold text-[#00d4ff]/60">{s}</span>
+            {i < 4 && <span className="text-[#3a5a6a]">&rarr;</span>}
+          </div>
+        ))}
+      </motion.div>
+      <motion.div custom={5} variants={fade} initial="hidden" animate="visible" className="mt-3">
+        <p className="font-mono text-[12px] text-[#3a5a6a]">
+          End-to-end under 500ms &middot; 7 drone profiles &middot; RF fingerprinting
+        </p>
+      </motion.div>
     </div>
   );
 }
@@ -554,6 +597,53 @@ function SlideStack() {
   );
 }
 
+function SlideTeam() {
+  const members = [
+    { name: "GEORGE SCRIPCARIU", role: "Mentor / Lead", desc: "Field operations, hardware integration, threat response" },
+    { name: "NICOLAE FRATILA", role: "AI / PMO", desc: "Sensor fusion architecture, ML pipeline, system design" },
+    { name: "LIVIU OLOS", role: "AI / DevOps / Security", desc: "Infrastructure, deployment, security hardening" },
+    { name: "MARC", role: "Dev / Ops", desc: "Development, operations, platform engineering" },
+  ];
+  return (
+    <div className="flex flex-col justify-end h-full pb-24">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
+          The Team
+        </h2>
+      </motion.div>
+      <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-3">
+        <p className="text-[15px] text-[#7a9ab8] max-w-[580px]">
+          INDIGO AirGuard — Romanian Ministry of Defence ecosystem
+        </p>
+      </motion.div>
+      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-6 space-y-4">
+        {members.map((m, i) => (
+          <motion.div
+            key={m.name}
+            custom={3 + i}
+            variants={fade}
+            initial="hidden"
+            animate="visible"
+            className="flex items-baseline gap-4"
+          >
+            <div className="w-[240px] shrink-0">
+              <div className="font-mono text-[15px] sm:text-[17px] font-bold text-[#e8f4ff] tracking-wide">
+                {m.name}
+              </div>
+              <div className="font-mono text-[12px] text-[#00d4ff] tracking-[0.1em] uppercase mt-0.5">
+                {m.role}
+              </div>
+            </div>
+            <div className="text-[14px] text-[#556a7a]">
+              {m.desc}
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
 function SlideRunning() {
   return (
     <div className="flex flex-col justify-end h-full pb-24">
@@ -574,7 +664,24 @@ function SlideRunning() {
           Cernavoda nuclear plant, Mihail Kogalniceanu NATO air base, Deveselu, and more.
         </p>
       </motion.div>
-      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5 space-y-2">
+      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5 flex flex-wrap gap-2">
+        {[
+          { zone: "OTP", name: "Henri Coanda" },
+          { zone: "CNE", name: "Cernavoda Nuclear" },
+          { zone: "MK", name: "Kogalniceanu NATO" },
+          { zone: "DEV", name: "Deveselu Aegis" },
+          { zone: "CTZ", name: "Campia Turzii" },
+          { zone: "CLJ", name: "Cluj" },
+          { zone: "TIM", name: "Timisoara" },
+          { zone: "CTA", name: "Constanta" },
+        ].map((z) => (
+          <div key={z.zone} className="px-2.5 py-1 glass font-mono text-[11px]">
+            <span className="text-[#00d4ff] font-bold">{z.zone}</span>
+            <span className="text-[#3a5a6a] ml-1.5">{z.name}</span>
+          </div>
+        ))}
+      </motion.div>
+      <motion.div custom={4} variants={fade} initial="hidden" animate="visible" className="mt-5 space-y-2">
         <p className="font-mono text-[14px]">
           <span className="text-[#556a7a]">DEMO </span>
           <span className="text-[#00d4ff]">apex-sentinel-demo.vercel.app</span>
@@ -1038,6 +1145,7 @@ export default function Presentation() {
             {slideId === "demo" && <SlideDemo />}
             {slideId === "tech" && <SlideTech />}
             {slideId === "stack" && <SlideStack />}
+            {slideId === "team" && <SlideTeam />}
             {slideId === "running" && <SlideRunning />}
             {slideId === "close" && <SlideClose />}
           </motion.div>
