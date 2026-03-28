@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CountUp } from "@/components/CountUp";
+
 
 /* ═══════════════════════════════════════════════════════════
    DATA — Sensor nodes, arcs, slides
@@ -49,16 +49,14 @@ const DEFENSE_ARCS = [
 ];
 
 const SLIDES = [
-  { id: "title", label: "SENTINEL" },
-  { id: "problem", label: "THE WAR" },
-  { id: "insight", label: "THE PHONES" },
-  { id: "pipeline", label: "HOW" },
-  { id: "rf", label: "RF" },
-  { id: "elrs", label: "DNA" },
-  { id: "4d-model", label: "4D" },
-  { id: "engineering", label: "PROOF" },
-  { id: "live-demo", label: "LIVE" },
-  { id: "roadmap", label: "NEXT" },
+  { id: "title", label: "INDIGO" },
+  { id: "threat", label: "THREAT" },
+  { id: "phones", label: "PHONES" },
+  { id: "demo", label: "LIVE" },
+  { id: "tech", label: "TECH" },
+  { id: "stack", label: "STACK" },
+  { id: "running", label: "DEMO" },
+  { id: "close", label: "NEXT" },
 ] as const;
 
 type SlideId = (typeof SLIDES)[number]["id"];
@@ -335,10 +333,10 @@ function HudTopBar() {
       <div className="flex items-center gap-4">
         <div>
           <div className="font-mono text-[13px] tracking-[0.2em] text-[#00d4ff] uppercase font-bold">
-            APEX-SENTINEL
+            INDIGO-AIRGUARD
           </div>
           <div className="font-mono text-[10px] tracking-[0.15em] text-[#3a5a6a] uppercase">
-            Counter-UAS Network
+            Defending Airspace
           </div>
         </div>
         <div className="flex items-center gap-2 ml-2">
@@ -368,8 +366,7 @@ function ClassificationBar() {
       <div className="w-full h-[1px] bg-[rgba(0,212,255,0.15)]" />
       <div className="flex items-center justify-center py-1.5 bg-[rgba(0,0,0,0.85)]">
         <span className="font-mono text-[9px] tracking-[0.3em] text-[#1a3a4a] uppercase">
-          CLASSIFIED &nbsp;// &nbsp;APEX-SENTINEL COUNTER-UAS NETWORK &nbsp;// &nbsp;NATO
-          EASTERN FLANK
+          INDIGO AIRGUARD &nbsp;&middot; &nbsp;DEFENDING AIRSPACE &nbsp;&middot; &nbsp;EUDIS 2026
         </span>
       </div>
     </div>
@@ -385,7 +382,7 @@ function SlideTitle() {
     <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h1 className="font-mono text-[44px] sm:text-[60px] font-bold tracking-[0.12em] text-white uppercase leading-none">
-          APEX SENTINEL
+          INDIGO AIRGUARD
         </h1>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-3">
@@ -393,75 +390,76 @@ function SlideTitle() {
       </motion.div>
       <motion.p custom={2} variants={fade} initial="hidden" animate="visible"
         className="mt-5 text-[18px] sm:text-[22px] text-[#e8f4ff] leading-relaxed max-w-[580px]">
-        What if every smartphone in Europe could detect a hostile drone?
+        What if the phone in your pocket could warn you about an incoming drone?
       </motion.p>
       <motion.p custom={3} variants={fade} initial="hidden" animate="visible"
         className="mt-3 text-[15px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
-        An open-source distributed sensor network that turns civilian phones into a defense grid across the NATO Eastern Flank.
+        Our answer to Defending Airspace. A civilian sensor network for Europe&apos;s most exposed border.
       </motion.p>
       <motion.div custom={4} variants={fade} initial="hidden" animate="visible"
         className="mt-8 font-mono text-[12px] tracking-[0.2em] text-[#00d4ff]/50 uppercase">
-        EUDIS 2026 · DEFENDING AIRSPACE
+        EUDIS 2026
       </motion.div>
     </div>
   );
 }
 
-function SlideProblem() {
+function SlideThreat() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          The Problem
+          Drones Changed Warfare
         </h2>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          A <span className="text-[#ff4444] font-bold">$400 FPV drone</span> can destroy a
-          <span className="text-[#ffaa00] font-bold"> $2 million</span> target.
-          The systems built to stop them cost even more.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          A <span className="text-[#ff4444] font-semibold">$400 racing drone</span> with a grenade
+          can take out an armoured vehicle. A Shahed loitering munition hits a power station from
+          a thousand kilometres away.
         </p>
       </motion.div>
       <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          500,000+ drone attacks since 2022. Defenders are outspent 5,000 to 1.
-          Current counter-drone systems need fixed installations, trained operators,
-          and cost millions per unit. They can&apos;t scale.
+        <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+          The defence systems that could stop them &mdash; radar, jammers, interceptors &mdash; cost
+          tens of thousands to millions per unit. They protect one building, one base. They need
+          trained operators and fixed infrastructure.
         </p>
       </motion.div>
       <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[14px] text-[#556a7a] italic max-w-[540px]">
-          &ldquo;The drone problem isn&apos;t a technology gap. It&apos;s a distribution gap.&rdquo;
+        <p className="text-[15px] text-[#556a7a] leading-relaxed max-w-[580px]">
+          Romania is on the front line. The threat doesn&apos;t stop at the border.
         </p>
       </motion.div>
     </div>
   );
 }
 
-function SlideInsight() {
+function SlidePhones() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          The Insight
+          The Sensors Already Exist
         </h2>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          There are <span className="text-[#00d4ff] font-bold">500 million smartphones</span> across
-          the NATO Eastern Flank. Every single one has a microphone that can hear a drone,
-          a WiFi radio that can sense its signal, and a GPS that knows exactly where it is.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          Romania has <span className="text-[#00d4ff] font-semibold">28 million mobile connections</span>.
+          Every smartphone has a microphone that can hear a drone, a WiFi radio that can
+          sense its control signal, GPS that knows where it is, and enough processing power
+          to classify what it heard.
         </p>
       </motion.div>
       <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          APEX Sentinel turns that existing hardware into a distributed defense grid.
-          A civilian downloads the app. It runs silently. The moment a drone enters range,
-          the network knows — and the commander has a track on screen in under 500 milliseconds.
+        <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+          We built an app that turns those phones into detection nodes. When three phones hear
+          the same drone, the system triangulates its position and a commander sees it on their
+          display in under half a second.
         </p>
       </motion.div>
       <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="font-mono text-[13px] text-[#00d4ff]/60">
+        <p className="font-mono text-[14px] text-[#00d4ff]/50">
           No new infrastructure. No specialized equipment. No trained operators.
         </p>
       </motion.div>
@@ -469,119 +467,60 @@ function SlideInsight() {
   );
 }
 
-function SlidePipeline() {
+function SlideDemo() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
+      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
+        <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
+          Watch It Happen
+        </h2>
+      </motion.div>
+      <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          What you see behind this text is a simulation of our sensor network over Romania.
+        </p>
+      </motion.div>
+      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
+        <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+          <span className="text-[#ff4444]">Red</span> &mdash; inbound drones.{" "}
+          <span className="text-[#00d4ff]">Cyan</span> &mdash; phone sensors.{" "}
+          Watch the detection cascade: acoustic contact, RF confirmation, triangulation, tracking, alert.
+        </p>
+      </motion.div>
+      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5">
+        <p className="text-[15px] text-[#556a7a] leading-relaxed max-w-[580px]">
+          This is what it looks like when a civilian population becomes an early warning system.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
+function SlideTech() {
+  return (
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
           How It Works
         </h2>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          A phone&apos;s microphone picks up motor noise at 200m. Its WiFi radio detects a 2.4GHz
-          control link. Three phones triangulate the position to ±12 meters.
-          An ML model classifies the threat in 156ms.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          Every sensor node has a position and a clock. The better the clock, the better
+          the triangulation. A GPS pulse-per-second signal gives <span className="text-[#00d4ff] font-semibold">&plusmn;12 metre</span> accuracy.
+          Regular network time gives &plusmn;62 metres. Both are useful &mdash; the system weights
+          them according to their actual precision.
         </p>
       </motion.div>
       <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          The commander sees a red track on their display within 500 milliseconds
-          of first detection. No manual intervention. Fully autonomous pipeline.
-        </p>
-      </motion.div>
-      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5 flex items-center gap-3">
-        {["DETECT", "CLASSIFY", "TRACK", "ALERT"].map((s, i) => (
-          <div key={s} className="flex items-center gap-3">
-            <span className="font-mono text-[14px] font-bold text-[#00d4ff]">{s}</span>
-            {i < 3 && <span className="text-[#3a5a6a]">→</span>}
-          </div>
-        ))}
-        <span className="font-mono text-[13px] text-[#556a7a] ml-2">&lt;500ms</span>
-      </motion.div>
-    </div>
-  );
-}
-
-function SlideRF() {
-  return (
-    <div className="flex flex-col justify-end h-full pb-20">
-      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          Seeing the Invisible
-        </h2>
-      </motion.div>
-      <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          Every drone broadcasts a control signal. APEX Sentinel listens on
-          <span className="text-[#00d4ff] font-semibold"> 2.4GHz and 5.8GHz</span>,
-          analyzing frequency-hopping patterns to detect drones before they&apos;re
-          visible or audible.
-        </p>
-      </motion.div>
-      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          A $30 RTL-SDR dongle turns any laptop into a spectrum analyzer.
-          Our waterfall decomposition spots FHSS hop patterns that fingerprint
-          specific drone models — even when they&apos;re trying to hide.
-        </p>
-      </motion.div>
-    </div>
-  );
-}
-
-function SlideELRS() {
-  return (
-    <div className="flex flex-col justify-end h-full pb-20">
-      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          Digital DNA
-        </h2>
-      </motion.div>
-      <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          Every transmitter has a unique RF fingerprint — like a digital fingerprint.
-          APEX Sentinel extracts it from <span className="text-[#00d4ff] font-semibold">ELRS,
-          Crossfire, DJI, and analog protocols</span>, identifying not just
-          the drone type but the specific transmitter.
-        </p>
-      </motion.div>
-      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          If the same operator launches a second drone, we know immediately.
-          RF bearing estimation tells the commander which direction it&apos;s coming from.
-          All data is processed through a GDPR-compliant pipeline.
-        </p>
-      </motion.div>
-    </div>
-  );
-}
-
-function Slide4D() {
-  return (
-    <div className="flex flex-col justify-end h-full pb-20">
-      <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
-        <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          The 4th Dimension
-        </h2>
-      </motion.div>
-      <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          Every sensor node exists in <span className="text-[#00d4ff] font-semibold">4D space</span>:
-          latitude, longitude, altitude — and <em>time precision</em>.
-          A phone with GPS-PPS achieves ±1 microsecond, giving ±12m triangulation.
-          A regular phone on NTP gets ±50ms, yielding ±62m.
-        </p>
-      </motion.div>
-      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          The system weights each node&apos;s contribution by its clock quality.
-          It never lies to the commander about what it knows.
-          Every track&apos;s error radius reflects the actual uncertainty of the contributing nodes.
+        <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+          Behind this: a tracking filter that predicts trajectory. Seven acoustic profiles
+          matching specific drone types. RF analysis that identifies the control protocol and
+          fingerprints the individual transmitter. The system never overstates what it knows.
         </p>
       </motion.div>
       <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <code className="font-mono text-[15px] text-[#00d4ff]">
+        <code className="font-mono text-[15px] text-[#00d4ff]/70">
           Node(lat, lon, alt, timePrecision&mu;s)
         </code>
       </motion.div>
@@ -589,166 +528,104 @@ function Slide4D() {
   );
 }
 
-function SlideEngineering() {
+function SlideStack() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          Not a Prototype
+          The Full Stack
         </h2>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          <span className="font-mono text-[#00e676] font-bold"><CountUp target={3301} duration={2000} /> tests</span>.
-          All passing. 21 development waves. 95%+ code coverage.
-          Mutation testing at 85% on critical paths. IEC 61508 safety compliance.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          We&apos;re not just software. Our team brings acoustic detection and sensor fusion &mdash;
+          the distributed phone network. Machine learning &mdash; seven drone profiles trained
+          on real acoustic signatures.
         </p>
       </motion.div>
       <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
-        <p className="text-[15px] text-[#7a9ab8] leading-relaxed max-w-[540px]">
-          This is a production-grade sensor fusion library.
-          34 TypeScript modules with a full test pyramid — unit, integration, end-to-end.
-          Every commit runs through automated quality gates.
+        <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+          Field hardware &mdash; radar, cameras, RF analysis, physical intercept.
+          The complete chain from first detection to response. Open source software.
+          Tested hardware. One integrated system for Defending Airspace.
         </p>
-      </motion.div>
-      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <div className="flex items-center gap-1">
-          {Array.from({ length: 21 }, (_, i) => (
-            <div key={i} className="w-[10px] h-[4px] rounded-[1px] bg-[#00e676]/70" />
-          ))}
-          <span className="ml-3 font-mono text-[12px] text-[#556a7a]">21/21 waves complete</span>
-        </div>
       </motion.div>
     </div>
   );
 }
 
-function SlideOpenSource() {
+function SlideRunning() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
-          Built in Public
+          It&apos;s Running
         </h2>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          The entire codebase is open source under MIT.
-          Anyone can inspect, contribute, or deploy their own instance.
-          The live demo dashboard shows real-time data feeds from
-          Romanian airspace — NOTAMs, weather, ADS-B aircraft, and simulated drone tracks.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          Our demo dashboard is live right now. Real Romanian airspace data &mdash; NOTAMs, weather,
+          ADS-B aircraft positions &mdash; alongside simulated drone tracks with full alert escalation.
         </p>
       </motion.div>
-      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-5 space-y-2">
-        <p className="font-mono text-[14px]">
-          <span className="text-[#556a7a]">REPO </span>
-          <span className="text-[#00d4ff]">github.com/fratilanico/apex-sentinel</span>
+      <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-4">
+        <p className="text-[15px] sm:text-[17px] text-[#7a9ab8] leading-relaxed max-w-[580px]">
+          Eight protected zones across Romania: Henri Coanda Airport,
+          Cernavoda nuclear plant, Mihail Kogalniceanu NATO air base, Deveselu, and more.
         </p>
+      </motion.div>
+      <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-5 space-y-2">
         <p className="font-mono text-[14px]">
           <span className="text-[#556a7a]">DEMO </span>
-          <span className="text-[#00e676]">apex-sentinel-demo.vercel.app</span>
+          <span className="text-[#00d4ff]">apex-sentinel-demo.vercel.app</span>
+        </p>
+        <p className="font-mono text-[14px]">
+          <span className="text-[#556a7a]">CODE </span>
+          <span className="text-[#00d4ff]">github.com/fratilanico/apex-sentinel</span>
+        </p>
+        <p className="font-mono text-[13px] text-[#3a5a6a]">
+          Open source &middot; MIT licence
         </p>
       </motion.div>
     </div>
   );
 }
 
-function SlideRoadmap() {
+function SlideClose() {
   return (
-    <div className="flex flex-col justify-end h-full pb-20">
+    <div className="flex flex-col justify-end h-full pb-24">
       <motion.div custom={0} variants={fade} initial="hidden" animate="visible">
         <h2 className="font-mono text-[28px] sm:text-[36px] font-bold tracking-[0.08em] text-white uppercase">
           What&apos;s Next
         </h2>
       </motion.div>
       <motion.div custom={1} variants={fade} initial="hidden" animate="visible" className="mt-5">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          <span className="text-[#00d4ff] font-bold">Now:</span> Open source library and live demo
-          with real Romanian airspace data.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          <span className="text-[#00d4ff] font-semibold">Today:</span> An open-source library and a working demo.
         </p>
       </motion.div>
       <motion.div custom={2} variants={fade} initial="hidden" animate="visible" className="mt-3">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          <span className="text-[#ffaa00] font-bold">Next:</span> Android sensor app.
-          Field testing across Romania with volunteer networks.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          <span className="text-[#ffaa00] font-semibold">Next:</span> An Android app any civilian can install.
+          Field testing in Romania with real sensors and real drones.
         </p>
       </motion.div>
       <motion.div custom={3} variants={fade} initial="hidden" animate="visible" className="mt-3">
-        <p className="text-[16px] text-[#c8d8e8] leading-relaxed max-w-[540px]">
-          <span className="text-[#00e676] font-bold">Future:</span> NATO interoperability.
-          ATAK plugin for military integration. Municipal deployment for critical infrastructure.
+        <p className="text-[16px] sm:text-[18px] text-[#c8d8e8] leading-relaxed max-w-[580px]">
+          <span className="text-[#00e676] font-semibold">The goal:</span> A detection mesh where phones across
+          the Eastern Flank form a continuous early warning layer. Not replacing military systems &mdash;
+          extending their reach.
         </p>
       </motion.div>
-      <motion.div custom={4} variants={fade} initial="hidden" animate="visible" className="mt-6">
+      <motion.div custom={4} variants={fade} initial="hidden" animate="visible" className="mt-8">
+        <p className="text-[16px] italic text-[#7a9ab8] max-w-[580px]">
+          The threat is cheap and everywhere. The defence should be too.
+        </p>
+      </motion.div>
+      <motion.div custom={5} variants={fade} initial="hidden" animate="visible" className="mt-5">
         <p className="font-mono text-[13px] text-[#556a7a]">nico@apexos.dev</p>
       </motion.div>
     </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════
-   RIGHT SIDE PANEL — contextual stats per slide
-   ═══════════════════════════════════════════════════════════ */
-
-function RightPanel({ slideId }: { slideId: SlideId }) {
-  const panels: Partial<Record<SlideId, { title: string; items: string[] }>> = {
-    title: {
-      title: "NETWORK STATUS",
-      items: [
-        "15 SENSOR NODES",
-        "4 THREAT VECTORS",
-        "9 DEFENSE ARCS",
-        "COVERAGE: 238,397 km²",
-        "STATUS: OPERATIONAL",
-      ],
-    },
-    problem: {
-      title: "THREAT METRICS",
-      items: ["500K+ ATTACKS", "5,000:1 COST RATIO", "150km/h APPROACH", "GPS-GUIDED", "$400 UNIT COST"],
-    },
-    pipeline: {
-      title: "LATENCY BUDGET",
-      items: ["DETECT: 50ms", "CLASSIFY: 156ms", "FUSE: 80ms", "UPLINK: 50ms", "TOTAL: <500ms"],
-    },
-    "4d-model": {
-      title: "NODE GRID",
-      items: [
-        `T1: ${SENSOR_NODES.filter((n) => n.tier === 1).length} NODES`,
-        `T2: ${SENSOR_NODES.filter((n) => n.tier === 2).length} NODES`,
-        `T3: ${SENSOR_NODES.filter((n) => n.tier === 3).length} NODES`,
-        "MESH: 10 ARCS",
-        "THREATS: 4 VECTORS",
-      ],
-    },
-    engineering: {
-      title: "QUALITY GATES",
-      items: ["UNIT: 2,847", "INTEGRATION: 312", "E2E: 142", "MUTATION: 85%+", "COVERAGE: 95%+"],
-    },
-  };
-
-  const panel = panels[slideId];
-  if (!panel) return null;
-
-  return (
-    <motion.div
-      key={slideId}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, delay: 0.2 }}
-      className="fixed top-[72px] right-6 z-20 pointer-events-none"
-    >
-      <div className="glass px-4 py-3 w-[200px]">
-        <div className="font-mono text-[10px] tracking-[0.2em] text-[#00d4ff]/60 uppercase mb-2">
-          {panel.title}
-        </div>
-        {panel.items.map((item) => (
-          <div key={item} className="font-mono text-[11px] text-[#556a7a] leading-[1.7]">
-            {item}
-          </div>
-        ))}
-      </div>
-    </motion.div>
   );
 }
 
@@ -1138,15 +1015,13 @@ export default function Presentation() {
             className="h-full"
           >
             {slideId === "title" && <SlideTitle />}
-            {slideId === "problem" && <SlideProblem />}
-            {slideId === "insight" && <SlideInsight />}
-            {slideId === "pipeline" && <SlidePipeline />}
-            {slideId === "rf" && <SlideRF />}
-            {slideId === "elrs" && <SlideELRS />}
-            {slideId === "4d-model" && <Slide4D />}
-            {slideId === "engineering" && <SlideEngineering />}
-            {slideId === "open-source" && <SlideOpenSource />}
-            {slideId === "roadmap" && <SlideRoadmap />}
+            {slideId === "threat" && <SlideThreat />}
+            {slideId === "phones" && <SlidePhones />}
+            {slideId === "demo" && <SlideDemo />}
+            {slideId === "tech" && <SlideTech />}
+            {slideId === "stack" && <SlideStack />}
+            {slideId === "running" && <SlideRunning />}
+            {slideId === "close" && <SlideClose />}
           </motion.div>
         </AnimatePresence>
       </div>
