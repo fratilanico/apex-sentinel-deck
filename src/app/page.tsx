@@ -752,7 +752,7 @@ function DroneSimulation({
       onAlert({
         id: `${id}-spawn`,
         time: utcStamp(),
-        text: `RF anomaly detected — ${freq} — sector ${sector}`,
+        text: `RF anomaly — ${freq} — sector ${sector}`,
         color: "#ff4444",
         ts: Date.now(),
       });
@@ -761,12 +761,29 @@ function DroneSimulation({
         onAlert({
           id: `${id}-proto`,
           time: utcStamp(),
-          text: `${id} — ${proto} protocol confirmed — ${freq}`,
+          text: `${id} confirmed — ${proto}`,
           color: "#ffaa00",
           ts: Date.now(),
         });
       }, 1500);
     }, 8000);
+
+    // Ambient network status messages every 12s
+    const ambientInterval = setInterval(() => {
+      const msgs = [
+        { text: "15 nodes online — coverage nominal", color: "#0088aa" },
+        { text: "RF baseline stable — no interference", color: "#0088aa" },
+        { text: "Mesh latency 38ms — within threshold", color: "#0088aa" },
+        { text: "Acoustic calibration — background 42dB", color: "#0088aa" },
+      ];
+      const msg = msgs[Math.floor(Math.random() * msgs.length)];
+      onAlert({
+        id: `ambient-${Date.now()}`,
+        time: utcStamp(),
+        ...msg,
+        ts: Date.now(),
+      });
+    }, 12000);
 
     // Advance drones at 100ms tick
     const tickInterval = setInterval(() => {
@@ -791,7 +808,7 @@ function DroneSimulation({
             onAlert({
               id: `${drone.id}-detect`,
               time: utcStamp(),
-              text: `${drone.id} triangulating — 3 nodes — CEP ±${Math.floor(12 + Math.random() * 20)}m`,
+              text: `${drone.id} — 3 nodes — CEP ±${Math.floor(12 + Math.random() * 20)}m`,
               color: "#00d4ff",
               ts: Date.now(),
             });
@@ -806,7 +823,7 @@ function DroneSimulation({
             onAlert({
               id: `${drone.id}-track`,
               time: utcStamp(),
-              text: `${drone.id} track — bearing ${brg}° — confidence ${75 + Math.floor(Math.random() * 20)}%`,
+              text: `${drone.id} tracked — brg ${brg}° — ${75 + Math.floor(Math.random() * 20)}%`,
               color: "#ffaa00",
               ts: Date.now(),
             });
@@ -886,6 +903,7 @@ function DroneSimulation({
     return () => {
       clearInterval(spawnInterval);
       clearInterval(tickInterval);
+      clearInterval(ambientInterval);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [globe]);
@@ -904,7 +922,7 @@ function AlertFeed({ events }: { events: AlertEvent[] }) {
     <div className="fixed top-[72px] right-6 z-20 pointer-events-none w-[280px]">
       <div className="glass px-4 py-3">
         <div className="font-mono text-[12px] tracking-[0.2em] text-[#00d4ff]/60 uppercase mb-3">
-          THREAT FEED
+          SENSOR FEED
         </div>
         <div className="space-y-1.5">
           <AnimatePresence initial={false}>
